@@ -70,7 +70,13 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 
 # Check if frontend build exists (for single-service deployment)
-FRONTEND_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
+# Try multiple possible locations for the frontend dist
+_possible_paths = [
+    Path("/app/frontend/dist"),  # Docker container
+    Path(__file__).parent.parent.parent.parent / "frontend" / "dist",  # Local dev
+    Path(__file__).parent.parent.parent / "frontend" / "dist",  # Alternative structure
+]
+FRONTEND_DIR = next((p for p in _possible_paths if p.exists()), _possible_paths[0])
 
 
 @app.get("/health")
