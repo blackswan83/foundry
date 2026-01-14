@@ -3,9 +3,21 @@ import { api, PipelineResult, CohortResult, PatientAnalysis } from './services/a
 
 type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai';
 
+const PIPELINE_STEPS = [
+  { num: 1, title: 'Data Generation', desc: 'Generating synthetic Saudi patient data across hospital systems' },
+  { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
+  { num: 3, title: 'De-identification', desc: 'Applying Safe Harbor + HiPS compliant PHI removal' },
+  { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
+  { num: 5, title: 'Analytics Ready', desc: 'Enabling cohort queries and AI insights' },
+];
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
   const [linkageDemo, setLinkageDemo] = useState<Record<string, unknown> | null>(null);
   const [deidDemo, setDeidDemo] = useState<Record<string, unknown> | null>(null);
@@ -21,9 +33,28 @@ function App() {
   const runPipeline = async () => {
     setLoading(true);
     setError(null);
+    setCompletedSteps([]);
+    setCurrentStep(0);
+    setPipelineResult(null);
+
     try {
-      const result = await api.runFullPipeline(30);
+      // Start the API call
+      const apiPromise = api.runFullPipeline(30);
+
+      // Animate through steps with delays
+      for (let i = 1; i <= 5; i++) {
+        setCurrentStep(i);
+        await sleep(500 + Math.random() * 400); // 500-900ms per step
+        setCompletedSteps(prev => [...prev, i]);
+      }
+
+      // Wait for actual API result
+      const result = await apiPromise;
       setPipelineResult(result);
+
+      // Small delay before loading demos
+      await sleep(300);
+
       // Load demos after pipeline
       const [linkage, deid, omop, queries, analyticsData] = await Promise.all([
         api.getLinkageDemo(),
@@ -42,8 +73,11 @@ function App() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      setCompletedSteps([]);
+      setCurrentStep(0);
     } finally {
       setLoading(false);
+      setCurrentStep(0);
     }
   };
 
@@ -81,41 +115,44 @@ function App() {
     setCohortResult(null);
     setPatientAnalysis(null);
     setAnalytics(null);
+    setCompletedSteps([]);
+    setCurrentStep(0);
   };
 
   const renderPipelineTab = () => (
     <div className="pipeline-section">
       <div className="pipeline-controls">
         <button className="btn btn-primary" onClick={runPipeline} disabled={loading}>
-          {loading ? <><span className="loading-spinner"></span> Running...</> : '▶ Run Full Pipeline'}
+          {loading ? <><span className="loading-spinner"></span> Processing...</> : 'Run Full Pipeline'}
         </button>
-        <button className="btn btn-secondary" onClick={resetDemo}>
-          ↺ Reset Demo
+        <button className="btn btn-secondary" onClick={resetDemo} disabled={loading}>
+          Reset Demo
         </button>
       </div>
 
       {error && (
         <div className="result-card" style={{ borderColor: 'var(--danger)' }}>
-          <h3>⚠ Error</h3>
+          <h3>Error</h3>
           <p>{error}</p>
         </div>
       )}
 
       <div className="pipeline-steps">
-        {[
-          { num: 1, title: 'Data Generation', desc: 'Generate synthetic Saudi patient data across multiple hospital systems' },
-          { num: 2, title: 'Patient Linkage', desc: 'Tokenize records for cross-system patient linkage' },
-          { num: 3, title: 'De-identification', desc: 'Safe Harbor + HiPS compliant PHI removal' },
-          { num: 4, title: 'OMOP Transformation', desc: 'Convert to OMOP CDM v5.4 format' },
-          { num: 5, title: 'Analytics Ready', desc: 'Enable cohort queries and AI insights' },
-        ].map(step => {
-          const pipelineStep = pipelineResult?.pipeline_steps?.find(s => s.step === step.num);
-          const isCompleted = pipelineStep?.status === 'completed';
-          const isActive = loading && pipelineResult?.pipeline_steps?.length === step.num - 1;
+        {PIPELINE_STEPS.map(step => {
+          const isCompleted = completedSteps.includes(step.num);
+          const isActive = currentStep === step.num && !isCompleted;
 
           return (
             <div key={step.num} className={`step-card ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
-              <div className="step-number">{isCompleted ? '✓' : step.num}</div>
+              <div className="step-number">
+                {isCompleted ? (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
+                  </svg>
+                ) : isActive ? (
+                  <span className="step-spinner"></span>
+                ) : step.num}
+              </div>
               <h3>{step.title}</h3>
               <p>{step.desc}</p>
             </div>
@@ -124,8 +161,8 @@ function App() {
       </div>
 
       {pipelineResult && pipelineResult.overall_status === 'completed' && (
-        <div className="result-card">
-          <h3>✓ Pipeline Completed Successfully</h3>
+        <div className="result-card success-card">
+          <h3>Pipeline Completed Successfully</h3>
           <div className="stats-grid">
             {pipelineResult.pipeline_steps.map(step => (
               <div key={step.step} className="stat-item">
@@ -145,7 +182,7 @@ function App() {
 
   const renderLinkageTab = () => (
     <div className="results-section">
-      <h2>🔗 Cross-System Patient Linkage</h2>
+      <h2>Cross-System Patient Linkage</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Demonstrates how tokenization enables linking patient records across multiple disconnected hospital systems
         while maintaining complete anonymity.
@@ -170,7 +207,7 @@ function App() {
               </div>
               <div className="stat-item">
                 <div className="value" style={{ color: 'var(--success)' }}>
-                  {((linkageDemo as { linkage_result?: { successfully_linked?: boolean } }).linkage_result?.successfully_linked) ? '✓ Yes' : 'No'}
+                  {((linkageDemo as { linkage_result?: { successfully_linked?: boolean } }).linkage_result?.successfully_linked) ? 'Yes' : 'No'}
                 </div>
                 <div className="label">Successfully Linked</div>
               </div>
@@ -185,7 +222,7 @@ function App() {
           </div>
 
           <div className="result-card" style={{ borderColor: 'var(--success)' }}>
-            <h3>✓ Common Anonymous Token</h3>
+            <h3>Common Anonymous Token</h3>
             <div style={{ fontSize: '1.5rem', fontFamily: 'monospace', color: 'var(--primary)' }}>
               {((linkageDemo as { linkage_result?: { common_token?: string } }).linkage_result?.common_token) ?? 'N/A'}
             </div>
@@ -204,7 +241,7 @@ function App() {
 
   const renderDeidentificationTab = () => (
     <div className="results-section">
-      <h2>🔒 De-identification (Safe Harbor + HiPS)</h2>
+      <h2>De-identification (Safe Harbor + HiPS)</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Shows Safe Harbor compliant de-identification with realistic surrogate data using the HiPS methodology.
       </p>
@@ -213,7 +250,7 @@ function App() {
         <>
           <div className="demo-grid">
             <div className="result-card" style={{ borderColor: 'var(--danger)' }}>
-              <h3>⚠ Original PHI (Protected)</h3>
+              <h3>Original PHI (Protected)</h3>
               <div className="code-block">
                 <pre>{JSON.stringify(
                   (deidDemo as { before_after?: { original_phi?: unknown } }).before_after?.original_phi,
@@ -223,7 +260,7 @@ function App() {
             </div>
 
             <div className="result-card" style={{ borderColor: 'var(--success)' }}>
-              <h3>✓ De-identified Data (Safe)</h3>
+              <h3>De-identified Data (Safe)</h3>
               <div className="code-block">
                 <pre>{JSON.stringify(
                   (deidDemo as { before_after?: { deidentified?: unknown } }).before_after?.deidentified,
@@ -241,11 +278,11 @@ function App() {
                 <div className="label">Identifiers Removed</div>
               </div>
               <div className="stat-item">
-                <div className="value" style={{ color: 'var(--success)' }}>✓</div>
+                <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
                 <div className="label">Safe Harbor Compliant</div>
               </div>
               <div className="stat-item">
-                <div className="value" style={{ color: 'var(--success)' }}>✓</div>
+                <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
                 <div className="label">Research Utility</div>
               </div>
             </div>
@@ -280,7 +317,7 @@ function App() {
 
   const renderOMOPTab = () => (
     <div className="results-section">
-      <h2>🔄 OMOP CDM Transformation</h2>
+      <h2>OMOP CDM Transformation</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Demonstrates conversion of heterogeneous clinical data into standardized OMOP Common Data Model v5.4 format.
       </p>
@@ -322,7 +359,7 @@ function App() {
 
   const renderCohortTab = () => (
     <div className="results-section">
-      <h2>📊 Research Cohort Queries</h2>
+      <h2>Research Cohort Queries</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Query the OMOP-transformed data to build research cohorts based on clinical criteria.
       </p>
@@ -389,7 +426,7 @@ function App() {
 
   const renderAITab = () => (
     <div className="results-section">
-      <h2>🤖 AI Clinical Intelligence</h2>
+      <h2>AI Clinical Intelligence</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         AI-powered analysis of patient encounters generating actionable clinical insights.
       </p>
@@ -453,9 +490,9 @@ function App() {
                   patientAnalysis.insights.map((insight, i) => (
                     <div key={i} className={`insight-card ${insight.severity}`}>
                       <div className="insight-title">
-                        {insight.severity === 'high' ? '🔴' :
-                         insight.severity === 'medium' ? '🟠' :
-                         insight.severity === 'low' ? '🔵' : '🟢'} {insight.title}
+                        {insight.severity === 'high' ? '●' :
+                         insight.severity === 'medium' ? '●' :
+                         insight.severity === 'low' ? '●' : '●'} {insight.title}
                       </div>
                       <div className="insight-description">{insight.description}</div>
                       {insight.recommendations.length > 0 && (
@@ -512,9 +549,9 @@ function App() {
   return (
     <div className="container">
       <header className="header">
-        <h1>Nuraxi Foundry</h1>
-        <p className="subtitle">King Faisal Specialist Hospital & Research Centre</p>
-        <p className="version">Demo Prototype v1.0 | January 2026</p>
+        <h1>Nora Foundry</h1>
+        <p className="subtitle">Clinical Data Intelligence Platform</p>
+        <p className="version">Demo Prototype v1.0</p>
       </header>
 
       <div className="tabs">
