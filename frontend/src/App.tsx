@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis } from './services/api';
 
 type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai';
