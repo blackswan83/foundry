@@ -99,13 +99,22 @@ function App() {
   };
 
   const runCohortQuery = async () => {
-    if (!selectedQuery) return;
+    if (!selectedQuery) {
+      setError('Please select a query first');
+      return;
+    }
     setLoading(true);
+    setError(null);
+    setCohortResult(null);
     try {
       const result = await api.runCohortQuery(selectedQuery);
       setCohortResult(result.cohort_result);
+      if (result.cohort_result.member_count === 0) {
+        setError(`No patients found matching "${result.cohort_result.cohort_name}" criteria. Try a different query or run the demo pipeline first.`);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Query failed');
+      console.error('Cohort query error:', err);
+      setError(err instanceof Error ? err.message : 'Query failed. Make sure data has been processed first.');
     } finally {
       setLoading(false);
     }
@@ -716,12 +725,17 @@ function App() {
               className="cohort-select"
               value={selectedQuery}
               onChange={(e) => setSelectedQuery(e.target.value)}
+              disabled={cohortQueries.length === 0}
             >
-              {cohortQueries.map(q => (
-                <option key={q.id} value={q.id}>{q.name} - {q.description}</option>
-              ))}
+              {cohortQueries.length === 0 ? (
+                <option value="">Loading queries...</option>
+              ) : (
+                cohortQueries.map(q => (
+                  <option key={q.id} value={q.id}>{q.name} - {q.description}</option>
+                ))
+              )}
             </select>
-            <button className="btn btn-primary" onClick={runCohortQuery} disabled={loading}>
+            <button className="btn btn-primary" onClick={runCohortQuery} disabled={loading || cohortQueries.length === 0}>
               {loading ? <span className="loading-spinner"></span> : 'Run Query'}
             </button>
           </div>

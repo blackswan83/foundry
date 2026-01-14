@@ -48,8 +48,19 @@ class CSVParserService:
         "phone_number", "email", "address_line1", "city", "region", "postal_code",
         "encounter_id", "encounter_type", "admission_date", "discharge_date",
         "department", "diagnosis_code", "diagnosis_description",
-        "chief_complaint", "clinical_notes",
+        "chief_complaint", "clinical_notes", "source_system",
     ]
+
+    # Map source system names to enum values
+    SOURCE_SYSTEM_MAP = {
+        "kfshrc": SourceSystem.HIS,
+        "king faisal specialist hospital": SourceSystem.HIS,
+        "riyadh military hospital": SourceSystem.LIS,
+        "prince sultan military medical city": SourceSystem.LIS,
+        "king fahd medical city": SourceSystem.PACS,
+        "king abdulaziz medical city": SourceSystem.PHARMACY,
+        "king khalid university hospital": SourceSystem.HIS,
+    }
 
     # Column name aliases (for flexibility)
     COLUMN_ALIASES = {
@@ -307,9 +318,13 @@ class CSVParserService:
         gender = self._parse_gender(gender_str)
         patient_id = row.get("patient_id", "").strip() or self._generate_patient_id()
 
+        # Parse source system
+        source_system_str = row.get("source_system", "").strip().lower()
+        source_system = self.SOURCE_SYSTEM_MAP.get(source_system_str, SourceSystem.HIS)
+
         try:
             patient = Patient(
-                source_system=SourceSystem.HIS,  # Default to HIS for uploaded data
+                source_system=source_system,
                 source_patient_id=patient_id,
                 national_id=row.get("national_id", "").strip() or None,
                 first_name=first_name,
