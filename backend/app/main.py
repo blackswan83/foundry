@@ -6,8 +6,13 @@ Version 1.0 - January 2026
 Main FastAPI application entry point.
 """
 
-from fastapi import FastAPI
+import os
+from pathlib import Path
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from .api import router
 
@@ -64,29 +69,57 @@ app.add_middleware(
 # Include API routes
 app.include_router(router, prefix="/api")
 
-
-@app.get("/")
-async def root():
-    """Root endpoint with demo information."""
-    return {
-        "name": "Nuraxi Foundry Demo Prototype",
-        "version": "1.0.0",
-        "organization": "King Faisal Specialist Hospital & Research Centre",
-        "description": "Interactive demo showcasing clinical data transformation capabilities",
-        "api_docs": "/api/docs",
-        "demo_capabilities": [
-            "Synthetic Saudi Patient Data Generation",
-            "Cross-System Patient Linkage via Tokenization",
-            "Safe Harbor + HiPS De-identification",
-            "OMOP CDM v5.4 Transformation",
-            "Research Cohort Queries",
-            "AI Clinical Intelligence",
-        ],
-        "quick_start": "POST /api/demo/full-pipeline to run the complete demonstration",
-    }
+# Check if frontend build exists (for single-service deployment)
+FRONTEND_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "nuraxi-foundry-demo"}
+
+
+# Serve frontend static files if they exist
+if FRONTEND_DIR.exists():
+    # Mount static assets
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+
+    @app.get("/")
+    async def serve_frontend():
+        """Serve the frontend application."""
+        return FileResponse(FRONTEND_DIR / "index.html")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        """Serve SPA for any non-API routes."""
+        # Don't intercept API routes
+        if full_path.startswith("api/"):
+            return {"error": "Not found"}
+
+        # Check if it's a static file
+        file_path = FRONTEND_DIR / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(file_path)
+
+        # Return index.html for SPA routing
+        return FileResponse(FRONTEND_DIR / "index.html")
+else:
+    @app.get("/")
+    async def root():
+        """Root endpoint with demo information."""
+        return {
+            "name": "Nuraxi Foundry Demo Prototype",
+            "version": "1.0.0",
+            "organization": "King Faisal Specialist Hospital & Research Centre",
+            "description": "Interactive demo showcasing clinical data transformation capabilities",
+            "api_docs": "/api/docs",
+            "demo_capabilities": [
+                "Synthetic Saudi Patient Data Generation",
+                "Cross-System Patient Linkage via Tokenization",
+                "Safe Harbor + HiPS De-identification",
+                "OMOP CDM v5.4 Transformation",
+                "Research Cohort Queries",
+                "AI Clinical Intelligence",
+            ],
+            "quick_start": "POST /api/demo/full-pipeline to run the complete demonstration",
+        }

@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+// Use environment variable for API URL, fallback to relative path for same-origin
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export interface PipelineResult {
   pipeline_steps: Array<{
