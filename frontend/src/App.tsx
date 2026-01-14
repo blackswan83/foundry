@@ -798,7 +798,7 @@ function App() {
               value={selectedPatient}
               onChange={(e) => setSelectedPatient(parseInt(e.target.value) || 1)}
               min={1}
-              max={30}
+              max={(analytics as { data_summary?: { total_persons?: number } })?.data_summary?.total_persons || 1000}
               style={{
                 padding: '0.75rem 1rem',
                 borderRadius: '8px',

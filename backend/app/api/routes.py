@@ -414,7 +414,12 @@ async def run_full_pipeline(
     4. Transform to OMOP CDM
     5. Generate analytics and AI insights
     """
-    global _demo_data_cache
+    global _demo_data_cache, omop_transformer, deid_service, tokenization_service
+
+    # Reset services to ensure fresh state (person_id counters start at 0)
+    omop_transformer = OMOPTransformer()
+    deid_service = DeidentificationService()
+    tokenization_service = TokenizationService()
 
     results = {
         "pipeline_steps": [],
@@ -521,8 +526,16 @@ async def get_demo_status():
 @router.delete("/demo/reset")
 async def reset_demo():
     """Reset all demo data and start fresh."""
-    global _demo_data_cache
+    global _demo_data_cache, omop_transformer, cohort_service, clinical_ai, deid_service, tokenization_service
     _demo_data_cache = {}
+
+    # Reset all service instances to clear state (especially person_id counters)
+    omop_transformer = OMOPTransformer()
+    cohort_service = CohortQueryService()
+    clinical_ai = ClinicalAIAgent()
+    deid_service = DeidentificationService()
+    tokenization_service = TokenizationService()
+
     return {"status": "success", "message": "Demo data cleared"}
 
 
@@ -542,7 +555,11 @@ async def upload_csv(file: UploadFile = File(...)):
 
     Returns the processed and de-identified data.
     """
-    global _demo_data_cache
+    global _demo_data_cache, omop_transformer, tokenization_service
+
+    # Reset services to ensure fresh state (person_id counters start at 0)
+    omop_transformer = OMOPTransformer()
+    tokenization_service = TokenizationService()
 
     # Validate file type
     if not file.filename or not file.filename.endswith('.csv'):
