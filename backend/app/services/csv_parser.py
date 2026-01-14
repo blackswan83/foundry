@@ -55,11 +55,11 @@ class CSVParserService:
     SOURCE_SYSTEM_MAP = {
         "kfshrc": SourceSystem.HIS,
         "king faisal specialist hospital": SourceSystem.HIS,
-        "riyadh military hospital": SourceSystem.LIS,
-        "prince sultan military medical city": SourceSystem.LIS,
-        "king fahd medical city": SourceSystem.PACS,
-        "king abdulaziz medical city": SourceSystem.PHARMACY,
-        "king khalid university hospital": SourceSystem.HIS,
+        "riyadh military hospital": SourceSystem.EMR,
+        "prince sultan military medical city": SourceSystem.EMR,
+        "king fahd medical city": SourceSystem.LAB,
+        "king abdulaziz medical city": SourceSystem.RAD,
+        "king khalid university hospital": SourceSystem.ICU,
     }
 
     # Column name aliases (for flexibility)
