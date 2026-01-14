@@ -173,15 +173,17 @@ class CohortQueryService:
         conditions = self._omop_data.get("condition_occurrence", [])
         person_conditions = [c for c in conditions if c["person_id"] == person_id]
 
-        target_concept = self.CONCEPT_MAPPINGS.get(criterion.value, criterion.value)
-
-        if criterion.operator == Operator.EXISTS:
-            return any(c["condition_concept_id"] == target_concept for c in person_conditions)
-        elif criterion.operator == Operator.EQUALS:
-            return any(c["condition_concept_id"] == target_concept for c in person_conditions)
-        elif criterion.operator == Operator.IN:
+        if criterion.operator == Operator.IN:
+            # Handle list of values for IN operator
             targets = [self.CONCEPT_MAPPINGS.get(v, v) for v in criterion.value]
             return any(c["condition_concept_id"] in targets for c in person_conditions)
+        else:
+            # Single value for EXISTS/EQUALS
+            target_concept = self.CONCEPT_MAPPINGS.get(criterion.value, criterion.value)
+            if criterion.operator == Operator.EXISTS:
+                return any(c["condition_concept_id"] == target_concept for c in person_conditions)
+            elif criterion.operator == Operator.EQUALS:
+                return any(c["condition_concept_id"] == target_concept for c in person_conditions)
         return False
 
     def _evaluate_medication_criterion(
