@@ -1,12 +1,14 @@
 """
 De-identification Service
 
-Implements Safe Harbor and HiPS (Hybrid Pseudonymization Strategy) methodologies
-for de-identifying Protected Health Information (PHI) while maintaining data utility.
+Implements PDPL-Compliant and HiPS (Hybrid Pseudonymization Strategy) methodologies
+for de-identifying Sensitive Personal Data while maintaining data utility.
 
-Safe Harbor Method (HIPAA):
-- Removes or generalizes 18 specific identifiers
-- Provides a "safe" way to de-identify data without statistical analysis
+PDPL-Compliant Method (Saudi Arabia):
+- Compliant with Saudi Personal Data Protection Law (PDPL)
+- Enforced by SDAIA (Saudi Data and Artificial Intelligence Authority)
+- Health data classified as "Sensitive Personal Data" under PDPL Article 2
+- Removes or generalizes personal identifiers per PDPL requirements
 
 HiPS (Hybrid Pseudonymization Strategy):
 - Combines multiple de-identification techniques
@@ -44,20 +46,22 @@ class DeidentificationConfig:
 
 class DeidentificationService:
     """
-    Service for de-identifying patient data using Safe Harbor and HiPS methodologies.
+    Service for de-identifying patient data using PDPL-Compliant and HiPS methodologies.
+    Compliant with Saudi Arabia's Personal Data Protection Law (PDPL).
     """
 
-    # HIPAA Safe Harbor 18 identifiers
-    SAFE_HARBOR_IDENTIFIERS = [
+    # PDPL Sensitive Personal Data identifiers (Saudi Arabia)
+    # Based on Saudi Personal Data Protection Law Article 2
+    PDPL_SENSITIVE_DATA_IDENTIFIERS = [
         "names",
-        "geographic_data",  # smaller than state
+        "geographic_data",  # smaller than region
         "dates",  # except year
         "phone_numbers",
         "fax_numbers",
         "email_addresses",
-        "social_security_numbers",
+        "national_id_numbers",  # Saudi National ID
         "medical_record_numbers",
-        "health_plan_beneficiary_numbers",
+        "health_insurance_numbers",
         "account_numbers",
         "certificate_license_numbers",
         "vehicle_identifiers",
@@ -400,9 +404,11 @@ class DeidentificationService:
                 "female": self._surrogate_counter["F"],
             },
             "action_summary": action_counts,
-            "safe_harbor_compliance": {
-                "identifiers_addressed": self.SAFE_HARBOR_IDENTIFIERS,
-                "method": "Safe Harbor + HiPS hybrid",
+            "pdpl_compliance": {
+                "identifiers_addressed": self.PDPL_SENSITIVE_DATA_IDENTIFIERS,
+                "method": "PDPL-Compliant + HiPS",
+                "regulation": "Saudi Personal Data Protection Law (PDPL)",
+                "enforced_by": "SDAIA (Saudi Data and Artificial Intelligence Authority)",
             },
             "configuration": {
                 "date_shift_range": self.config.date_shift_range,

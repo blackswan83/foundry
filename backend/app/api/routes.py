@@ -609,7 +609,7 @@ async def upload_csv(file: UploadFile = File(...)):
         },
         "deidentification": {
             "patients_processed": deid_report["total_patients_deidentified"],
-            "method": "Safe Harbor + HiPS",
+            "method": "PDPL-Compliant + HiPS",
         },
         "download_available": True,
     }

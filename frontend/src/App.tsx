@@ -7,7 +7,7 @@ type PipelineMode = 'demo' | 'upload';
 const PIPELINE_STEPS = [
   { num: 1, title: 'Data Generation', desc: 'Generating synthetic Saudi patient data across hospital systems' },
   { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
-  { num: 3, title: 'De-identification', desc: 'Applying Safe Harbor + HiPS compliant PHI removal' },
+  { num: 3, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
   { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
   { num: 5, title: 'Analytics Ready', desc: 'Enabling cohort queries and AI insights' },
 ];
@@ -15,7 +15,7 @@ const PIPELINE_STEPS = [
 const UPLOAD_STEPS = [
   { num: 1, title: 'CSV Parsing', desc: 'Reading and validating uploaded patient records' },
   { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
-  { num: 3, title: 'De-identification', desc: 'Applying Safe Harbor + HiPS compliant PHI removal' },
+  { num: 3, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
   { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
   { num: 5, title: 'Ready to Download', desc: 'Anonymized data ready for export' },
 ];
@@ -288,7 +288,7 @@ function App() {
             </div>
             <div className="pipeline-controls">
               <a href="/sample_patient_data.csv" download className="btn btn-secondary">
-                Download Sample CSV (1,000 patients)
+                Download Sample CSV (200 patients, ~1,000 encounters)
               </a>
               <button className="btn btn-secondary" onClick={resetDemo} disabled={loading}>
                 Reset
@@ -365,8 +365,8 @@ function App() {
                 <div className="label">Patients De-identified</div>
               </div>
               <div className="stat-item">
-                <div className="value" style={{ color: 'var(--success)' }}>Safe Harbor</div>
-                <div className="label">Method</div>
+                <div className="value" style={{ color: 'var(--success)' }}>PDPL</div>
+                <div className="label">Compliance</div>
               </div>
             </div>
             <div style={{ marginTop: '1.5rem' }}>
@@ -451,9 +451,10 @@ function App() {
 
   const renderDeidentificationTab = () => (
     <div className="results-section">
-      <h2>De-identification (Safe Harbor + HiPS)</h2>
+      <h2>De-identification (PDPL + HiPS)</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Shows Safe Harbor compliant de-identification with realistic surrogate data using the HiPS methodology.
+        Shows PDPL-compliant de-identification with realistic surrogate data using the HiPS methodology.
+        Compliant with Saudi Personal Data Protection Law enforced by SDAIA.
       </p>
 
       {deidDemo ? (
@@ -489,7 +490,7 @@ function App() {
               </div>
               <div className="stat-item">
                 <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
-                <div className="label">Safe Harbor Compliant</div>
+                <div className="label">PDPL Compliant</div>
               </div>
               <div className="stat-item">
                 <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
