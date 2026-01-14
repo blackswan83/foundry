@@ -476,6 +476,33 @@ class CohortQueryService:
 
         return self.build_cohort(predefined_queries[query_name])
 
+    # SNOMED concept ID to display name mapping
+    CONDITION_NAMES = {
+        0: "Unmapped/Other",
+        44054006: "Type 2 Diabetes",
+        38341003: "Hypertension",
+        84114007: "Heart Failure",
+        709044004: "Chronic Kidney Disease",
+        46177005: "End-Stage Renal Disease",
+        93143009: "Acute Lymphoid Leukemia",
+        254837009: "Breast Cancer",
+        118601006: "Non-Hodgkin Lymphoma",
+        109989006: "Multiple Myeloma",
+        53741008: "Coronary Artery Disease",
+        233604007: "Pneumonia",
+        91302008: "Sepsis",
+        14669001: "Acute Kidney Injury",
+        230690007: "Stroke",
+        22298006: "Myocardial Infarction",
+        59282003: "Pulmonary Embolism",
+        128053003: "Deep Vein Thrombosis",
+        25370001: "Hepatocellular Carcinoma",
+        363406005: "Colon Cancer",
+        19943007: "Cirrhosis",
+        417357006: "Sickle Cell Disease",
+        40108008: "Thalassemia Major",
+    }
+
     def get_analytics_summary(self) -> Dict[str, Any]:
         """Get overall analytics summary of the data."""
         persons = self._omop_data.get("person", [])
@@ -496,8 +523,8 @@ class CohortQueryService:
             concept_id = d.get("drug_concept_id", 0)
             drug_counts[concept_id] = drug_counts.get(concept_id, 0) + 1
 
-        # Reverse lookup for names
-        reverse_concepts = {v: k for k, v in self.CONCEPT_MAPPINGS.items()}
+        # Reverse lookup for drug names
+        reverse_drugs = {v: k for k, v in self.CONCEPT_MAPPINGS.items() if isinstance(v, int)}
 
         top_conditions = sorted(condition_counts.items(), key=lambda x: x[1], reverse=True)[:10]
         top_drugs = sorted(drug_counts.items(), key=lambda x: x[1], reverse=True)[:10]
@@ -513,7 +540,7 @@ class CohortQueryService:
             "top_conditions": [
                 {
                     "concept_id": concept_id,
-                    "name": reverse_concepts.get(concept_id, f"concept_{concept_id}"),
+                    "name": self.CONDITION_NAMES.get(concept_id, f"SNOMED {concept_id}"),
                     "count": count,
                 }
                 for concept_id, count in top_conditions
@@ -521,7 +548,7 @@ class CohortQueryService:
             "top_medications": [
                 {
                     "concept_id": concept_id,
-                    "name": reverse_concepts.get(concept_id, f"concept_{concept_id}"),
+                    "name": reverse_drugs.get(concept_id, f"RxNorm {concept_id}"),
                     "count": count,
                 }
                 for concept_id, count in top_drugs

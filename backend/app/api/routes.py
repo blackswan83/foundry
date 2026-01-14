@@ -299,24 +299,13 @@ async def run_cohort_query(request: CohortQueryRequest):
     if "omop_data" not in _demo_data_cache:
         raise HTTPException(status_code=404, detail="OMOP data not ready. Run /demo/transform-to-omop first.")
 
-    # Debug: check data availability
-    omop_data = _demo_data_cache["omop_data"]
-    person_count = len(omop_data.get("person", []))
-    condition_count = len(omop_data.get("condition_occurrence", []))
-
-    # Reload data into cohort service to ensure it's current
-    cohort_service.load_omop_data(omop_data)
+    # Ensure cohort service has current data
+    cohort_service.load_omop_data(_demo_data_cache["omop_data"])
 
     result = cohort_service.run_predefined_query(request.query_name)
 
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
-
-    # Add debug info to result
-    result["_debug"] = {
-        "persons_in_omop": person_count,
-        "conditions_in_omop": condition_count,
-    }
 
     return {
         "status": "success",
@@ -333,43 +322,6 @@ async def get_analytics():
     # Ensure cohort service has current data
     cohort_service.load_omop_data(_demo_data_cache["omop_data"])
     return cohort_service.get_analytics_summary()
-
-
-@router.get("/demo/debug/omop-data")
-async def debug_omop_data():
-    """Debug endpoint to inspect OMOP data."""
-    if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="No OMOP data")
-
-    omop_data = _demo_data_cache["omop_data"]
-
-    # Count conditions by concept_id
-    condition_counts = {}
-    for c in omop_data.get("condition_occurrence", []):
-        cid = c.get("condition_concept_id", 0)
-        condition_counts[cid] = condition_counts.get(cid, 0) + 1
-
-    # Key SNOMED codes we care about
-    key_concepts = {
-        44054006: "diabetes",
-        38341003: "hypertension",
-        84114007: "heart_failure",
-        709044004: "ckd",
-    }
-
-    return {
-        "persons": len(omop_data.get("person", [])),
-        "visits": len(omop_data.get("visit_occurrence", [])),
-        "conditions": len(omop_data.get("condition_occurrence", [])),
-        "measurements": len(omop_data.get("measurement", [])),
-        "drugs": len(omop_data.get("drug_exposure", [])),
-        "condition_concept_counts": condition_counts,
-        "key_concepts_found": {
-            name: condition_counts.get(cid, 0)
-            for cid, name in key_concepts.items()
-        },
-        "sample_conditions": omop_data.get("condition_occurrence", [])[:5],
-    }
 
 
 # ============ Clinical AI Endpoints ============
