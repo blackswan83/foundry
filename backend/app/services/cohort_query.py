@@ -378,6 +378,20 @@ class CohortQueryService:
         query_name: str,
     ) -> Dict[str, Any]:
         """Run a predefined research query."""
+        # Special case: all_patients returns everyone
+        if query_name == "all_patients":
+            persons = self._omop_data.get("person", [])
+            all_ids = [p["person_id"] for p in persons]
+            stats = self._calculate_cohort_statistics(all_ids)
+            return {
+                "cohort_name": "All Patients",
+                "description": "All patients in the dataset",
+                "member_count": len(all_ids),
+                "member_ids": all_ids,
+                "statistics": stats,
+                "criteria_summary": {"inclusion": [], "exclusion": []},
+            }
+
         predefined_queries = {
             "diabetic_patients": CohortDefinition(
                 name="Diabetic Patients",
@@ -516,6 +530,7 @@ class CohortQueryService:
     def get_available_queries(self) -> List[Dict[str, str]]:
         """Get list of available predefined queries."""
         return [
+            {"id": "all_patients", "name": "All Patients", "description": "All patients in dataset"},
             {"id": "diabetic_patients", "name": "Diabetic Patients", "description": "Patients with Type 2 Diabetes"},
             {"id": "ckd_on_dialysis", "name": "CKD Patients", "description": "Chronic Kidney Disease patients"},
             {"id": "transplant_patients", "name": "Transplant Recipients", "description": "Patients on immunosuppression"},
