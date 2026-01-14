@@ -1,12 +1,12 @@
 # Root-level Nixpacks config for single-service deployment
-# Deploys both backend and frontend together
+# Deploys backend (API) which can also serve frontend static files
 
 [phases.setup]
-nixPkgs = ["python311", "nodejs-18_x"]
+nixPkgs = ["python311", "python311Packages.pip", "nodejs_18"]
 
 [phases.install]
 cmds = [
-    "cd backend && pip install -r requirements.txt",
+    "cd backend && python -m pip install --upgrade pip && pip install -r requirements.txt",
     "cd frontend && npm ci"
 ]
 
@@ -14,4 +14,4 @@ cmds = [
 cmds = ["cd frontend && npm run build"]
 
 [start]
-cmd = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+cmd = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
