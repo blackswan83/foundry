@@ -4,7 +4,8 @@ API Routes for the Nuraxi Foundry Demo
 Provides REST endpoints for demonstrating all platform capabilities.
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File
+from fastapi.responses import Response
 from typing import Optional, List
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ from ..services import (
     CohortQueryService,
     ClinicalAIAgent,
 )
+from ..services.csv_parser import CSVParserService, generate_deidentified_csv
 
 router = APIRouter()
 
@@ -26,6 +28,7 @@ deid_service = DeidentificationService()
 omop_transformer = OMOPTransformer()
 cohort_service = CohortQueryService()
 clinical_ai = ClinicalAIAgent()
+csv_parser = CSVParserService()
 
 # Cache for demo data
 _demo_data_cache = {}
@@ -516,3 +519,135 @@ async def reset_demo():
     global _demo_data_cache
     _demo_data_cache = {}
     return {"status": "success", "message": "Demo data cleared"}
+
+
+# ============ CSV Upload/Download Endpoints ============
+
+@router.post("/demo/upload-csv")
+async def upload_csv(file: UploadFile = File(...)):
+    """
+    Upload a CSV file containing patient data for de-identification.
+
+    The CSV must contain at minimum: first_name, last_name, date_of_birth, gender
+
+    Optional columns: national_id, mrn, middle_name, family_name, phone_number,
+    email, address_line1, city, region, postal_code, encounter_id, encounter_type,
+    admission_date, discharge_date, department, diagnosis_code, diagnosis_description,
+    chief_complaint, clinical_notes
+
+    Returns the processed and de-identified data.
+    """
+    global _demo_data_cache
+
+    # Validate file type
+    if not file.filename or not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV file")
+
+    # Read file content
+    try:
+        content = await file.read()
+        csv_content = content.decode('utf-8')
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded")
+
+    # Parse CSV
+    parse_result = csv_parser.parse_csv(csv_content)
+
+    if not parse_result.success and parse_result.valid_row_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "CSV parsing failed",
+                "errors": parse_result.errors,
+            }
+        )
+
+    # Store parsed data
+    _demo_data_cache["raw_data"] = {
+        "patients": parse_result.patients,
+        "encounters": parse_result.encounters,
+        "observations": [],  # CSV doesn't include observations
+        "summary": {
+            "total_patient_records": len(parse_result.patients),
+            "unique_individuals": len(parse_result.patients),
+            "total_encounters": len(parse_result.encounters),
+            "total_observations": 0,
+            "source": "csv_upload",
+            "filename": file.filename,
+        },
+    }
+    _demo_data_cache["csv_upload"] = True
+
+    # Run tokenization
+    tokens = tokenization_service.tokenize_patient_batch(parse_result.patients)
+    _demo_data_cache["patient_tokens"] = tokens
+
+    # Run de-identification
+    deid_service_instance = DeidentificationService()  # Fresh instance for new upload
+    deidentified = deid_service_instance.deidentify_dataset(
+        patients=parse_result.patients,
+        encounters=parse_result.encounters,
+        observations=[],
+        patient_tokens=tokens,
+    )
+    _demo_data_cache["deidentified_data"] = deidentified
+    deid_report = deid_service_instance.get_deidentification_report()
+
+    # Transform to OMOP
+    omop_data = omop_transformer.transform_dataset(deidentified)
+    _demo_data_cache["omop_data"] = omop_data
+    cohort_service.load_omop_data(omop_data)
+
+    return {
+        "status": "success",
+        "message": f"CSV processed successfully: {parse_result.valid_row_count} records de-identified",
+        "parsing": {
+            "total_rows": parse_result.row_count,
+            "valid_rows": parse_result.valid_row_count,
+            "errors": parse_result.errors[:5] if parse_result.errors else [],  # Limit errors shown
+            "warnings": parse_result.warnings[:5] if parse_result.warnings else [],
+        },
+        "deidentification": {
+            "patients_processed": deid_report["total_patients_deidentified"],
+            "method": "Safe Harbor + HiPS",
+        },
+        "download_available": True,
+    }
+
+
+@router.get("/demo/download-csv")
+async def download_deidentified_csv():
+    """
+    Download the de-identified data as a CSV file.
+
+    Must have previously uploaded and processed a CSV via /demo/upload-csv
+    or run the full pipeline via /demo/full-pipeline.
+    """
+    if "deidentified_data" not in _demo_data_cache:
+        raise HTTPException(
+            status_code=404,
+            detail="No de-identified data available. Upload a CSV or run the pipeline first."
+        )
+
+    deidentified = _demo_data_cache["deidentified_data"]
+
+    # Generate CSV content
+    csv_content = generate_deidentified_csv(
+        deidentified_patients=deidentified["patients"],
+        deidentified_encounters=deidentified["encounters"],
+    )
+
+    # Determine filename
+    if _demo_data_cache.get("csv_upload"):
+        original_name = _demo_data_cache.get("raw_data", {}).get("summary", {}).get("filename", "data")
+        filename = f"deidentified_{original_name}"
+    else:
+        filename = "deidentified_patient_data.csv"
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis } from './services/api';
 
 type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai';
+type PipelineMode = 'demo' | 'upload';
 
 const PIPELINE_STEPS = [
   { num: 1, title: 'Data Generation', desc: 'Generating synthetic Saudi patient data across hospital systems' },
@@ -11,14 +12,28 @@ const PIPELINE_STEPS = [
   { num: 5, title: 'Analytics Ready', desc: 'Enabling cohort queries and AI insights' },
 ];
 
+const UPLOAD_STEPS = [
+  { num: 1, title: 'CSV Parsing', desc: 'Reading and validating uploaded patient records' },
+  { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
+  { num: 3, title: 'De-identification', desc: 'Applying Safe Harbor + HiPS compliant PHI removal' },
+  { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
+  { num: 5, title: 'Ready to Download', desc: 'Anonymized data ready for export' },
+];
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('pipeline');
+  const [pipelineMode, setPipelineMode] = useState<PipelineMode>('demo');
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(null);
+  const [uploadResult, setUploadResult] = useState<{
+    message: string;
+    parsing: { total_rows: number; valid_rows: number; errors: string[]; warnings: string[] };
+    deidentification: { patients_processed: number; method: string };
+  } | null>(null);
   const [linkageDemo, setLinkageDemo] = useState<Record<string, unknown> | null>(null);
   const [deidDemo, setDeidDemo] = useState<Record<string, unknown> | null>(null);
   const [omopDemo, setOmopDemo] = useState<Record<string, unknown> | null>(null);
@@ -29,6 +44,8 @@ function App() {
   const [patientAnalysis, setPatientAnalysis] = useState<PatientAnalysis | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const runPipeline = async () => {
     setLoading(true);
@@ -109,6 +126,7 @@ function App() {
   const resetDemo = async () => {
     await api.resetDemo();
     setPipelineResult(null);
+    setUploadResult(null);
     setLinkageDemo(null);
     setDeidDemo(null);
     setOmopDemo(null);
@@ -119,66 +137,258 @@ function App() {
     setCurrentStep(0);
   };
 
-  const renderPipelineTab = () => (
-    <div className="pipeline-section">
-      <div className="pipeline-controls">
-        <button className="btn btn-primary" onClick={runPipeline} disabled={loading}>
-          {loading ? <><span className="loading-spinner"></span> Processing...</> : 'Run Full Pipeline'}
-        </button>
-        <button className="btn btn-secondary" onClick={resetDemo} disabled={loading}>
-          Reset Demo
-        </button>
-      </div>
+  const handleFileUpload = async (file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      setError('Please upload a CSV file');
+      return;
+    }
 
-      {error && (
-        <div className="result-card" style={{ borderColor: 'var(--danger)' }}>
-          <h3>Error</h3>
-          <p>{error}</p>
+    setLoading(true);
+    setError(null);
+    setCompletedSteps([]);
+    setCurrentStep(0);
+    setUploadResult(null);
+
+    try {
+      // Animate through steps
+      for (let i = 1; i <= 5; i++) {
+        setCurrentStep(i);
+        await sleep(400 + Math.random() * 300);
+        setCompletedSteps(prev => [...prev, i]);
+      }
+
+      // Perform actual upload
+      const result = await api.uploadCSV(file);
+      setUploadResult(result);
+
+      // Load demos after upload
+      await sleep(300);
+      const [queries, analyticsData] = await Promise.all([
+        api.getAvailableQueries(),
+        api.getAnalytics(),
+      ]);
+      setCohortQueries(queries.queries);
+      setAnalytics(analyticsData);
+      if (queries.queries.length > 0) {
+        setSelectedQuery(queries.queries[0].id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+      setCompletedSteps([]);
+      setCurrentStep(0);
+    } finally {
+      setLoading(false);
+      setCurrentStep(0);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const downloadCSV = async () => {
+    try {
+      const blob = await api.downloadDeidentifiedCSV();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'deidentified_patient_data.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Download failed');
+    }
+  };
+
+  const renderPipelineTab = () => {
+    const steps = pipelineMode === 'demo' ? PIPELINE_STEPS : UPLOAD_STEPS;
+
+    return (
+      <div className="pipeline-section">
+        {/* Mode Toggle */}
+        <div className="mode-toggle">
+          <button
+            className={`mode-btn ${pipelineMode === 'demo' ? 'active' : ''}`}
+            onClick={() => setPipelineMode('demo')}
+            disabled={loading}
+          >
+            Demo Mode
+          </button>
+          <button
+            className={`mode-btn ${pipelineMode === 'upload' ? 'active' : ''}`}
+            onClick={() => setPipelineMode('upload')}
+            disabled={loading}
+          >
+            Upload CSV
+          </button>
         </div>
-      )}
 
-      <div className="pipeline-steps">
-        {PIPELINE_STEPS.map(step => {
-          const isCompleted = completedSteps.includes(step.num);
-          const isActive = currentStep === step.num && !isCompleted;
-
-          return (
-            <div key={step.num} className={`step-card ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
-              <div className="step-number">
-                {isCompleted ? (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
-                  </svg>
-                ) : isActive ? (
-                  <span className="step-spinner"></span>
-                ) : step.num}
-              </div>
-              <h3>{step.title}</h3>
-              <p>{step.desc}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {pipelineResult && pipelineResult.overall_status === 'completed' && (
-        <div className="result-card success-card">
-          <h3>Pipeline Completed Successfully</h3>
-          <div className="stats-grid">
-            {pipelineResult.pipeline_steps.map(step => (
-              <div key={step.step} className="stat-item">
-                <div className="value">{
-                  typeof step.result === 'object' && step.result !== null
-                    ? Object.values(step.result)[0]?.toString() || '✓'
-                    : '✓'
-                }</div>
-                <div className="label">{step.name}</div>
-              </div>
-            ))}
+        {pipelineMode === 'demo' ? (
+          /* Demo Mode Controls */
+          <div className="pipeline-controls">
+            <button className="btn btn-primary" onClick={runPipeline} disabled={loading}>
+              {loading ? <><span className="loading-spinner"></span> Processing...</> : 'Run Full Pipeline'}
+            </button>
+            <button className="btn btn-secondary" onClick={resetDemo} disabled={loading}>
+              Reset Demo
+            </button>
           </div>
+        ) : (
+          /* Upload Mode Controls */
+          <>
+            <div
+              className={`upload-zone ${dragActive ? 'drag-active' : ''}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              <div className="upload-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+              </div>
+              <p className="upload-text">
+                {loading ? 'Processing...' : 'Drag & drop your CSV here, or click to browse'}
+              </p>
+              <p className="upload-hint">
+                Required: first_name, last_name, date_of_birth, gender
+              </p>
+            </div>
+            <div className="pipeline-controls">
+              <a href="/sample_patient_data.csv" download className="btn btn-secondary">
+                Download Sample CSV (1,000 patients)
+              </a>
+              <button className="btn btn-secondary" onClick={resetDemo} disabled={loading}>
+                Reset
+              </button>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="result-card" style={{ borderColor: 'var(--danger)' }}>
+            <h3>Error</h3>
+            <p>{error}</p>
+          </div>
+        )}
+
+        <div className="pipeline-steps">
+          {steps.map(step => {
+            const isCompleted = completedSteps.includes(step.num);
+            const isActive = currentStep === step.num && !isCompleted;
+
+            return (
+              <div key={step.num} className={`step-card ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}`}>
+                <div className="step-number">
+                  {isCompleted ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
+                    </svg>
+                  ) : isActive ? (
+                    <span className="step-spinner"></span>
+                  ) : step.num}
+                </div>
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
-  );
+
+        {/* Demo Mode Result */}
+        {pipelineMode === 'demo' && pipelineResult && pipelineResult.overall_status === 'completed' && (
+          <div className="result-card success-card">
+            <h3>Pipeline Completed Successfully</h3>
+            <div className="stats-grid">
+              {pipelineResult.pipeline_steps.map(step => (
+                <div key={step.step} className="stat-item">
+                  <div className="value">{
+                    typeof step.result === 'object' && step.result !== null
+                      ? Object.values(step.result)[0]?.toString() || '✓'
+                      : '✓'
+                  }</div>
+                  <div className="label">{step.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload Mode Result */}
+        {pipelineMode === 'upload' && uploadResult && (
+          <div className="result-card success-card">
+            <h3>De-identification Complete</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{uploadResult.message}</p>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="value">{uploadResult.parsing.total_rows}</div>
+                <div className="label">Rows Parsed</div>
+              </div>
+              <div className="stat-item">
+                <div className="value">{uploadResult.parsing.valid_rows}</div>
+                <div className="label">Valid Records</div>
+              </div>
+              <div className="stat-item">
+                <div className="value">{uploadResult.deidentification.patients_processed}</div>
+                <div className="label">Patients De-identified</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ color: 'var(--success)' }}>Safe Harbor</div>
+                <div className="label">Method</div>
+              </div>
+            </div>
+            <div style={{ marginTop: '1.5rem' }}>
+              <button className="btn btn-primary" onClick={downloadCSV}>
+                Download De-identified CSV
+              </button>
+            </div>
+            {uploadResult.parsing.errors.length > 0 && (
+              <div style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--warning)' }}>
+                <strong>Warnings:</strong>
+                <ul style={{ marginTop: '0.25rem', paddingLeft: '1.25rem' }}>
+                  {uploadResult.parsing.errors.slice(0, 3).map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderLinkageTab = () => (
     <div className="results-section">

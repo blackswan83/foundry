@@ -138,4 +138,43 @@ export const api = {
     });
     return response.json();
   },
+
+  async uploadCSV(file: File): Promise<{
+    status: string;
+    message: string;
+    parsing: {
+      total_rows: number;
+      valid_rows: number;
+      errors: string[];
+      warnings: string[];
+    };
+    deidentification: {
+      patients_processed: number;
+      method: string;
+    };
+    download_available: boolean;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE}/demo/upload-csv`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail?.message || error.detail || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  async downloadDeidentifiedCSV(): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/demo/download-csv`);
+    if (!response.ok) {
+      throw new Error('Download failed - no de-identified data available');
+    }
+    return response.blob();
+  },
 };
