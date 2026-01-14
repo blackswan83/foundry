@@ -41,16 +41,12 @@ body {
 }
 
 .header .logo {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.header h1 {
-  font-size: 3rem;
-  font-weight: 300;
-  color: var(--primary);
-  margin-bottom: 0;
-  letter-spacing: 0.15em;
-  text-transform: lowercase;
+.header .nuraxi-logo {
+  height: 48px;
+  width: auto;
 }
 
 .header .subtitle {

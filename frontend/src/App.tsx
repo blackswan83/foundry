@@ -550,13 +550,8 @@ function App() {
     <div className="container">
       <header className="header">
         <div className="logo">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="22" stroke="var(--primary)" strokeWidth="2.5" fill="none"/>
-            <circle cx="24" cy="24" r="8" fill="var(--primary)" opacity="0.3"/>
-            <circle cx="24" cy="24" r="4" fill="var(--primary)"/>
-          </svg>
+          <img src="/nuraxi-logo.svg" alt="Nuraxi" className="nuraxi-logo" />
         </div>
-        <h1>nora</h1>
         <p className="subtitle">foundry</p>
         <p className="version">Clinical Data Intelligence Platform</p>
         <span className="tag">Demo v1.0</span>
