@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis } from './services/api';
 
-type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai';
+type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality';
 type PipelineMode = 'demo' | 'upload';
 
 const PIPELINE_STEPS = [
@@ -46,6 +46,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [executiveSummary, setExecutiveSummary] = useState<Record<string, unknown> | null>(null);
+  const [dataQuality, setDataQuality] = useState<Record<string, unknown> | null>(null);
+  const [qualityMetrics, setQualityMetrics] = useState<Record<string, unknown> | null>(null);
 
   const runPipeline = async () => {
     setLoading(true);
@@ -73,18 +76,24 @@ function App() {
       await sleep(300);
 
       // Load demos after pipeline
-      const [linkage, deid, omop, queries, analyticsData] = await Promise.all([
+      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics] = await Promise.all([
         api.getLinkageDemo(),
         api.getDeidentificationDemo(),
         api.getOMOPTransformationDemo(),
         api.getAvailableQueries(),
         api.getAnalytics(),
+        api.getExecutiveSummary(),
+        api.getDataQuality(),
+        api.getQualityMetrics(),
       ]);
       setLinkageDemo(linkage);
       setDeidDemo(deid);
       setOmopDemo(omop);
       setCohortQueries(queries.queries);
       setAnalytics(analyticsData);
+      setExecutiveSummary(execSummary);
+      setDataQuality(dataQual);
+      setQualityMetrics(qualMetrics);
       if (queries.queries.length > 0) {
         setSelectedQuery(queries.queries[0].id);
       }
@@ -142,6 +151,9 @@ function App() {
     setCohortResult(null);
     setPatientAnalysis(null);
     setAnalytics(null);
+    setExecutiveSummary(null);
+    setDataQuality(null);
+    setQualityMetrics(null);
     setCompletedSteps([]);
     setCurrentStep(0);
   };
@@ -172,18 +184,24 @@ function App() {
 
       // Load demos after upload
       await sleep(300);
-      const [linkage, deid, omop, queries, analyticsData] = await Promise.all([
+      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics] = await Promise.all([
         api.getLinkageDemo(),
         api.getDeidentificationDemo(),
         api.getOMOPTransformationDemo(),
         api.getAvailableQueries(),
         api.getAnalytics(),
+        api.getExecutiveSummary(),
+        api.getDataQuality(),
+        api.getQualityMetrics(),
       ]);
       setLinkageDemo(linkage);
       setDeidDemo(deid);
       setOmopDemo(omop);
       setCohortQueries(queries.queries);
       setAnalytics(analyticsData);
+      setExecutiveSummary(execSummary);
+      setDataQuality(dataQual);
+      setQualityMetrics(qualMetrics);
       if (queries.queries.length > 0) {
         setSelectedQuery(queries.queries[0].id);
       }
@@ -905,6 +923,207 @@ function App() {
     </div>
   );
 
+  const renderExecutiveTab = () => (
+    <div className="results-section">
+      <h2>Executive Dashboard</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+        High-level overview of data processing results and key clinical metrics for leadership presentations.
+      </p>
+
+      {executiveSummary ? (
+        <>
+          <div className="result-card" style={{ borderColor: 'var(--primary)' }}>
+            <h3>Platform Overview</h3>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="value">{(executiveSummary as any).overview?.total_patients_processed || 0}</div>
+                <div className="label">Patients Processed</div>
+              </div>
+              <div className="stat-item">
+                <div className="value">{(executiveSummary as any).overview?.unique_individuals_identified || 0}</div>
+                <div className="label">Unique Individuals</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).overview?.cross_system_linkage_rate || 'N/A'}</div>
+                <div className="label">Linkage Rate</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).overview?.deidentification_completeness || 'N/A'}</div>
+                <div className="label">De-identification</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="demo-grid">
+            <div className="result-card">
+              <h3>Top 5 Conditions</h3>
+              <ul style={{ listStyle: 'none', padding: 0 }}>
+                {((executiveSummary as any).top_conditions || []).map((c: any, i: number) => (
+                  <li key={i} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                    <strong>{c.condition}</strong>
+                    <span style={{ float: 'right', color: 'var(--text-secondary)' }}>{c.count} ({c.percentage})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="result-card">
+              <h3>Top 5 Medications</h3>
+              <ul style={{ listStyle: 'none', padding: 0 }}>
+                {((executiveSummary as any).top_medications || []).map((m: any, i: number) => (
+                  <li key={i} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                    <strong>{m.medication}</strong>
+                    <span style={{ float: 'right', color: 'var(--text-secondary)' }}>{m.count} ({m.percentage})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="demo-grid">
+            <div className="result-card">
+              <h3>Quality Metrics</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div className="value" style={{ color: 'var(--primary)' }}>{(executiveSummary as any).quality_metrics?.overall_score || 0}%</div>
+                  <div className="label">Overall Score</div>
+                </div>
+                <div className="stat-item">
+                  <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).quality_metrics?.metrics_met || 0}</div>
+                  <div className="label">Metrics Met</div>
+                </div>
+                <div className="stat-item">
+                  <div className="value" style={{ color: 'var(--warning)' }}>{(executiveSummary as any).quality_metrics?.gaps_identified || 0}</div>
+                  <div className="label">Gaps Identified</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="result-card">
+              <h3>Risk Stratification</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div className="value" style={{ color: 'var(--danger)' }}>{(executiveSummary as any).risk_stratification?.high_risk_patients || 0}</div>
+                  <div className="label">High-Risk Patients</div>
+                </div>
+                <div className="stat-item">
+                  <div className="value">{(executiveSummary as any).risk_stratification?.percentage || '0%'}</div>
+                  <div className="label">of Population</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="result-card">
+            <h3>Platform Capabilities Demonstrated</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {((executiveSummary as any).platform_capabilities_demonstrated || []).map((cap: string, i: number) => (
+                <span key={i} style={{
+                  background: 'var(--bg-tertiary)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)'
+                }}>
+                  ✓ {cap}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="result-card">
+          <p>Run the pipeline first to see the executive dashboard.</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderQualityTab = () => (
+    <div className="results-section">
+      <h2>Data Quality & Clinical Metrics</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+        Comprehensive view of data quality scores and clinical quality metrics.
+      </p>
+
+      {dataQuality && qualityMetrics ? (
+        <>
+          <div className="result-card" style={{ borderColor: 'var(--primary)' }}>
+            <h3>Data Quality Scorecard</h3>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+                {(dataQuality as any).overall_quality_score || 0}%
+              </div>
+              <div style={{ color: 'var(--text-secondary)' }}>Overall Data Quality Score</div>
+            </div>
+            <div className="stats-grid">
+              {Object.entries((dataQuality as any).metrics || {}).map(([key, metric]: [string, any]) => (
+                <div key={key} className="stat-item">
+                  <div className="value" style={{
+                    color: metric.status === 'good' ? 'var(--success)' : 'var(--warning)'
+                  }}>
+                    {metric.rate}%
+                  </div>
+                  <div className="label">{metric.name}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {metric.numerator}/{metric.denominator}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="result-card">
+            <h3>Clinical Quality Metrics</h3>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--secondary)' }}>
+                {(qualityMetrics as any).overall_quality_score || 0}%
+              </div>
+              <div style={{ color: 'var(--text-secondary)' }}>Clinical Compliance Score</div>
+            </div>
+            <div className="stats-grid">
+              {Object.entries((qualityMetrics as any).metrics || {}).map(([key, metric]: [string, any]) => (
+                <div key={key} className="stat-item">
+                  <div className="value" style={{
+                    color: metric.status === 'met' ? 'var(--success)' : 'var(--warning)'
+                  }}>
+                    {metric.rate}%
+                  </div>
+                  <div className="label">{metric.name}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Target: {metric.target}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="result-card">
+            <h3>Quality Summary</h3>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="value">{(qualityMetrics as any).total_patients || 0}</div>
+                <div className="label">Total Patients</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ color: 'var(--success)' }}>{(qualityMetrics as any).metrics_met || 0}</div>
+                <div className="label">Metrics Met</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ color: 'var(--warning)' }}>{(qualityMetrics as any).gaps_identified || 0}</div>
+                <div className="label">Evidence Gaps</div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="result-card">
+          <p>Run the pipeline first to see data quality and clinical metrics.</p>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="container">
       <header className="header">
@@ -935,6 +1154,12 @@ function App() {
         <button className={`tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
           AI Insights
         </button>
+        <button className={`tab ${activeTab === 'executive' ? 'active' : ''}`} onClick={() => setActiveTab('executive')}>
+          Executive Dashboard
+        </button>
+        <button className={`tab ${activeTab === 'quality' ? 'active' : ''}`} onClick={() => setActiveTab('quality')}>
+          Data Quality
+        </button>
       </div>
 
       {activeTab === 'pipeline' && renderPipelineTab()}
@@ -943,6 +1168,8 @@ function App() {
       {activeTab === 'omop' && renderOMOPTab()}
       {activeTab === 'cohort' && renderCohortTab()}
       {activeTab === 'ai' && renderAITab()}
+      {activeTab === 'executive' && renderExecutiveTab()}
+      {activeTab === 'quality' && renderQualityTab()}
     </div>
   );
 }

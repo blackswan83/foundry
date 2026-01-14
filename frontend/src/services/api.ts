@@ -177,4 +177,28 @@ export const api = {
     }
     return response.blob();
   },
+
+  async getQualityMetrics(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/demo/quality-metrics`);
+    if (!response.ok) throw new Error('Failed to fetch quality metrics');
+    return response.json();
+  },
+
+  async getDataQuality(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/demo/data-quality`);
+    if (!response.ok) throw new Error('Failed to fetch data quality');
+    return response.json();
+  },
+
+  async getExecutiveSummary(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/demo/executive-summary`);
+    if (!response.ok) throw new Error('Failed to fetch executive summary');
+    return response.json();
+  },
+
+  async getReadmissionRisk(personId: number): Promise<Record<string, unknown>> {
+    const response = await fetch(`${API_BASE}/demo/readmission-risk/${personId}`);
+    if (!response.ok) throw new Error('Failed to fetch readmission risk');
+    return response.json();
+  },
 };

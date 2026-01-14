@@ -65,9 +65,36 @@ class ClinicalAIAgent:
 
     # Drug interaction rules (simplified for demo)
     DRUG_INTERACTIONS = {
+        # Original interactions
         ("warfarin", "aspirin"): "Increased bleeding risk with concurrent anticoagulant/antiplatelet therapy",
         ("metformin", "creatinine_high"): "Metformin contraindicated in severe renal impairment",
         ("tacrolimus", "potassium_high"): "Tacrolimus can exacerbate hyperkalemia",
+        # New interactions - High Risk
+        ("warfarin", "nsaid"): "NSAIDs increase bleeding risk with warfarin - consider alternative analgesic",
+        ("warfarin", "ibuprofen"): "Ibuprofen increases bleeding risk with warfarin",
+        ("aspirin", "ibuprofen"): "Concurrent NSAIDs increase GI bleeding risk",
+        ("lisinopril", "potassium"): "ACE inhibitors + potassium supplements risk hyperkalemia",
+        ("lisinopril", "spironolactone"): "ACE inhibitors + K-sparing diuretics risk severe hyperkalemia",
+        ("methotrexate", "nsaid"): "NSAIDs reduce methotrexate clearance - toxicity risk",
+        ("methotrexate", "ibuprofen"): "Ibuprofen reduces methotrexate clearance - toxicity risk",
+        ("digoxin", "amiodarone"): "Amiodarone increases digoxin levels - monitor closely",
+        ("simvastatin", "clarithromycin"): "Macrolides increase statin levels - myopathy risk",
+        ("atorvastatin", "clarithromycin"): "Macrolides increase statin levels - myopathy risk",
+        ("lithium", "nsaid"): "NSAIDs reduce lithium clearance - toxicity risk",
+        ("lithium", "ibuprofen"): "Ibuprofen reduces lithium clearance - toxicity risk",
+        # Respiratory/CNS depression
+        ("oxycodone", "lorazepam"): "Opioid + benzodiazepine: respiratory depression risk",
+        ("morphine", "lorazepam"): "Opioid + benzodiazepine: respiratory depression risk",
+        ("fentanyl", "midazolam"): "Opioid + benzodiazepine: respiratory depression risk",
+        # Serotonin syndrome
+        ("fluoxetine", "tramadol"): "SSRI + tramadol: serotonin syndrome risk",
+        ("sertraline", "tramadol"): "SSRI + tramadol: serotonin syndrome risk",
+        # Cardiac
+        ("metoprolol", "verapamil"): "Beta-blocker + CCB: severe bradycardia/heart block risk",
+        ("sildenafil", "nitroglycerin"): "PDE5 inhibitor + nitrates: severe hypotension - contraindicated",
+        # Absorption
+        ("ciprofloxacin", "antacid"): "Antacids reduce fluoroquinolone absorption - separate doses",
+        ("levothyroxine", "calcium"): "Calcium reduces levothyroxine absorption - separate doses",
     }
 
     # Quality metrics
@@ -594,6 +621,223 @@ class ClinicalAIAgent:
             })
 
         return opportunities
+
+    def calculate_quality_metrics(self, omop_data: Dict[str, List[Dict]]) -> Dict[str, Any]:
+        """
+        Calculate population-level healthcare quality metrics.
+        Returns evidence gaps and compliance rates for key clinical measures.
+        """
+        persons = omop_data.get("person", [])
+        conditions = omop_data.get("condition_occurrence", [])
+        measurements = omop_data.get("measurement", [])
+        drugs = omop_data.get("drug_exposure", [])
+
+        metrics = {}
+
+        # 1. Diabetes HbA1c Documentation Rate
+        diabetic_persons = set()
+        for c in conditions:
+            source = str(c.get("condition_source_value", "")).lower()
+            if "diabetes" in source or "e11" in source:
+                diabetic_persons.add(c.get("person_id"))
+
+        diabetics_with_hba1c = set()
+        for m in measurements:
+            source = str(m.get("measurement_source_value", "")).lower()
+            if ("hba1c" in source or "4548-4" in source) and m.get("person_id") in diabetic_persons:
+                diabetics_with_hba1c.add(m.get("person_id"))
+
+        metrics["diabetes_hba1c_monitoring"] = {
+            "name": "Diabetes HbA1c Monitoring",
+            "description": "% of diabetic patients with HbA1c documented",
+            "numerator": len(diabetics_with_hba1c),
+            "denominator": len(diabetic_persons) if diabetic_persons else 1,
+            "rate": round(len(diabetics_with_hba1c) / max(len(diabetic_persons), 1) * 100, 1),
+            "target": 90,
+            "status": "met" if len(diabetics_with_hba1c) / max(len(diabetic_persons), 1) >= 0.9 else "gap"
+        }
+
+        # 2. Hypertension BP Control
+        hypertensive_persons = set()
+        for c in conditions:
+            source = str(c.get("condition_source_value", "")).lower()
+            if "hypertension" in source or "i10" in source:
+                hypertensive_persons.add(c.get("person_id"))
+
+        bp_controlled = set()
+        for m in measurements:
+            source = str(m.get("measurement_source_value", "")).lower()
+            if "systolic" in source and m.get("person_id") in hypertensive_persons:
+                if m.get("value_as_number", 999) < 140:
+                    bp_controlled.add(m.get("person_id"))
+
+        metrics["hypertension_bp_control"] = {
+            "name": "Hypertension BP Control",
+            "description": "% of hypertensive patients with BP < 140/90",
+            "numerator": len(bp_controlled),
+            "denominator": len(hypertensive_persons) if hypertensive_persons else 1,
+            "rate": round(len(bp_controlled) / max(len(hypertensive_persons), 1) * 100, 1),
+            "target": 70,
+            "status": "met" if len(bp_controlled) / max(len(hypertensive_persons), 1) >= 0.7 else "gap"
+        }
+
+        # 3. CKD eGFR Monitoring
+        ckd_persons = set()
+        for c in conditions:
+            source = str(c.get("condition_source_value", "")).lower()
+            if "chronic kidney" in source or "ckd" in source or "n18" in source:
+                ckd_persons.add(c.get("person_id"))
+
+        ckd_with_egfr = set()
+        for m in measurements:
+            source = str(m.get("measurement_source_value", "")).lower()
+            if ("egfr" in source or "creatinine" in source) and m.get("person_id") in ckd_persons:
+                ckd_with_egfr.add(m.get("person_id"))
+
+        metrics["ckd_monitoring"] = {
+            "name": "CKD Monitoring",
+            "description": "% of CKD patients with eGFR/creatinine monitoring",
+            "numerator": len(ckd_with_egfr),
+            "denominator": len(ckd_persons) if ckd_persons else 1,
+            "rate": round(len(ckd_with_egfr) / max(len(ckd_persons), 1) * 100, 1),
+            "target": 85,
+            "status": "met" if len(ckd_with_egfr) / max(len(ckd_persons), 1) >= 0.85 else "gap"
+        }
+
+        # 4. Heart Failure on ACE/ARB
+        hf_persons = set()
+        for c in conditions:
+            source = str(c.get("condition_source_value", "")).lower()
+            if "heart failure" in source or "i50" in source:
+                hf_persons.add(c.get("person_id"))
+
+        hf_on_acei = set()
+        for d in drugs:
+            source = str(d.get("drug_source_value", "")).lower()
+            if any(med in source for med in ["lisinopril", "enalapril", "ramipril", "losartan", "valsartan"]):
+                if d.get("person_id") in hf_persons:
+                    hf_on_acei.add(d.get("person_id"))
+
+        metrics["heart_failure_acei"] = {
+            "name": "Heart Failure ACE/ARB Therapy",
+            "description": "% of HF patients on ACE inhibitor or ARB",
+            "numerator": len(hf_on_acei),
+            "denominator": len(hf_persons) if hf_persons else 1,
+            "rate": round(len(hf_on_acei) / max(len(hf_persons), 1) * 100, 1),
+            "target": 80,
+            "status": "met" if len(hf_on_acei) / max(len(hf_persons), 1) >= 0.8 else "gap"
+        }
+
+        # Calculate overall quality score
+        rates = [m["rate"] for m in metrics.values()]
+        overall_score = round(sum(rates) / len(rates), 1) if rates else 0
+
+        return {
+            "overall_quality_score": overall_score,
+            "metrics": metrics,
+            "total_patients": len(persons),
+            "gaps_identified": sum(1 for m in metrics.values() if m["status"] == "gap"),
+            "metrics_met": sum(1 for m in metrics.values() if m["status"] == "met"),
+        }
+
+    def calculate_readmission_risk(
+        self,
+        person_id: int,
+        omop_data: Dict[str, List[Dict]],
+    ) -> Dict[str, Any]:
+        """
+        Calculate 30-day readmission risk using rule-based scoring.
+        """
+        visits = [v for v in omop_data.get("visit_occurrence", []) if v["person_id"] == person_id]
+        conditions = [c for c in omop_data.get("condition_occurrence", []) if c["person_id"] == person_id]
+        drugs = [d for d in omop_data.get("drug_exposure", []) if d["person_id"] == person_id]
+        measurements = [m for m in omop_data.get("measurement", []) if m["person_id"] == person_id]
+        person = next((p for p in omop_data.get("person", []) if p["person_id"] == person_id), {})
+
+        risk_score = 0
+        risk_factors = []
+
+        # Factor 1: Multiple hospitalizations (+10 points)
+        inpatient_visits = [v for v in visits if v.get("visit_concept_id") == 9201]
+        if len(inpatient_visits) >= 2:
+            risk_score += 10
+            risk_factors.append({
+                "factor": "Frequent Hospitalizations",
+                "detail": f"{len(inpatient_visits)} admissions",
+                "points": 10
+            })
+
+        # Factor 2: Polypharmacy - 5+ medications (+5 points)
+        unique_drugs = len(set(d.get("drug_source_value", "") for d in drugs))
+        if unique_drugs >= 5:
+            risk_score += 5
+            risk_factors.append({
+                "factor": "Polypharmacy",
+                "detail": f"{unique_drugs} medications",
+                "points": 5
+            })
+
+        # Factor 3: Multiple chronic conditions (+5 points)
+        unique_conditions = len(set(c.get("condition_source_value", "") for c in conditions))
+        if unique_conditions >= 3:
+            risk_score += 5
+            risk_factors.append({
+                "factor": "Multiple Comorbidities",
+                "detail": f"{unique_conditions} conditions",
+                "points": 5
+            })
+
+        # Factor 4: Critical lab values (+5 points)
+        critical_labs = False
+        for m in measurements:
+            value = m.get("value_as_number")
+            source = str(m.get("measurement_source_value", "")).lower()
+            if value:
+                if "creatinine" in source and value > 4.0:
+                    critical_labs = True
+                if "potassium" in source and (value < 3.0 or value > 6.0):
+                    critical_labs = True
+                if "hemoglobin" in source and value < 8.0:
+                    critical_labs = True
+
+        if critical_labs:
+            risk_score += 5
+            risk_factors.append({
+                "factor": "Critical Lab Values",
+                "detail": "Abnormal values detected",
+                "points": 5
+            })
+
+        # Factor 5: Advanced age (+3 points)
+        current_year = datetime.now().year
+        age = current_year - person.get("year_of_birth", current_year)
+        if age > 75:
+            risk_score += 3
+            risk_factors.append({
+                "factor": "Advanced Age",
+                "detail": f"Age {age}",
+                "points": 3
+            })
+
+        # Determine risk level
+        if risk_score >= 16:
+            risk_level = "High"
+            color = "red"
+        elif risk_score >= 6:
+            risk_level = "Medium"
+            color = "orange"
+        else:
+            risk_level = "Low"
+            color = "green"
+
+        return {
+            "person_id": person_id,
+            "readmission_risk_score": risk_score,
+            "risk_level": risk_level,
+            "color": color,
+            "risk_factors": risk_factors,
+            "recommendation": "Consider care management enrollment" if risk_level == "High" else "Standard follow-up"
+        }
 
     def get_analysis_statistics(self) -> Dict:
         """Get statistics about AI agent analyses performed."""
