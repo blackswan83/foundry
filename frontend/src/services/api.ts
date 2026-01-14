@@ -70,8 +70,13 @@ export interface PatientAnalysis {
 
 export const api = {
   async runFullPipeline(numPatients: number = 30): Promise<PipelineResult> {
-    const response = await fetch(`${API_BASE}/demo/full-pipeline?num_patients=${numPatients}`);
-    if (!response.ok) throw new Error('Pipeline execution failed');
+    const response = await fetch(`${API_BASE}/demo/full-pipeline?num_patients=${numPatients}`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Pipeline failed: ${response.status} - ${text}`);
+    }
     return response.json();
   },
 
