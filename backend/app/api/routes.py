@@ -200,8 +200,8 @@ async def demonstrate_deidentification():
         "title": "De-identification Demonstration",
         "description": "Shows how PHI is transformed while preserving research utility",
         "before_after": demo,
-        "safe_harbor_compliance": {
-            "method": "Safe Harbor + HiPS Hybrid",
+        "pdpl_compliance": {
+            "method": "PDPL-Compliant + HiPS",
             "identifiers_removed": 18,
             "data_utility_preserved": True,
         },
@@ -467,7 +467,7 @@ async def run_full_pipeline(
             "status": "completed",
             "result": {
                 "patients_deidentified": deid_report["total_patients_deidentified"],
-                "method": deid_report["safe_harbor_compliance"]["method"],
+                "method": deid_report["pdpl_compliance"]["method"],
             },
         })
 
