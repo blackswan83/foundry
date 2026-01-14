@@ -549,9 +549,17 @@ function App() {
   return (
     <div className="container">
       <header className="header">
-        <h1>Nora Foundry</h1>
-        <p className="subtitle">Clinical Data Intelligence Platform</p>
-        <p className="version">Demo Prototype v1.0</p>
+        <div className="logo">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="var(--primary)" strokeWidth="2.5" fill="none"/>
+            <circle cx="24" cy="24" r="8" fill="var(--primary)" opacity="0.3"/>
+            <circle cx="24" cy="24" r="4" fill="var(--primary)"/>
+          </svg>
+        </div>
+        <h1>nora</h1>
+        <p className="subtitle">foundry</p>
+        <p className="version">Clinical Data Intelligence Platform</p>
+        <span className="tag">Demo v1.0</span>
       </header>
 
       <div className="tabs">
