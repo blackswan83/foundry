@@ -163,10 +163,16 @@ function App() {
 
       // Load demos after upload
       await sleep(300);
-      const [queries, analyticsData] = await Promise.all([
+      const [linkage, deid, omop, queries, analyticsData] = await Promise.all([
+        api.getLinkageDemo(),
+        api.getDeidentificationDemo(),
+        api.getOMOPTransformationDemo(),
         api.getAvailableQueries(),
         api.getAnalytics(),
       ]);
+      setLinkageDemo(linkage);
+      setDeidDemo(deid);
+      setOmopDemo(omop);
       setCohortQueries(queries.queries);
       setAnalytics(analyticsData);
       if (queries.queries.length > 0) {
@@ -386,6 +392,134 @@ function App() {
             )}
           </div>
         )}
+
+        {/* Pipeline Explanation Section - Always Visible */}
+        <div className="info-panel" style={{
+          marginTop: '2rem',
+          padding: '1.5rem',
+          background: 'var(--bg-card)',
+          borderRadius: '12px',
+          border: '1px solid var(--border-color)',
+        }}>
+          <h3 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>
+            How the Pipeline Works
+          </h3>
+          <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            {pipelineMode === 'demo'
+              ? 'Demo Mode: Processing 30 synthetic patients from multiple Saudi healthcare institutes'
+              : uploadResult
+                ? `Upload Mode: Processed ${uploadResult.parsing.valid_rows} patient records from your CSV`
+                : 'Upload Mode: Upload a CSV to process your patient data'
+            }
+          </p>
+
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                flexShrink: 0
+              }}>1</span>
+              <div>
+                <strong>Data Generation / CSV Parsing</strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                  Creates realistic patient records with Saudi demographics, encounters, and diagnoses
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                flexShrink: 0
+              }}>2</span>
+              <div>
+                <strong>Patient Linkage</strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                  Generates anonymous tokens from National ID using secure hashing (HMAC-SHA256) to link records across different hospitals without exposing identity
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                flexShrink: 0
+              }}>3</span>
+              <div>
+                <strong>De-identification (PDPL + HiPS)</strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                  Removes 18 sensitive identifiers (names, National ID, phone, etc.) per Saudi PDPL requirements. Uses realistic surrogate data to maintain utility.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                flexShrink: 0
+              }}>4</span>
+              <div>
+                <strong>OMOP Transformation</strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                  Standardizes clinical codes for global interoperability: ICD-10 to SNOMED, Labs to LOINC, Medications to RxNorm
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.8rem',
+                flexShrink: 0
+              }}>5</span>
+              <div>
+                <strong>Analytics Ready</strong>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                  De-identified, standardized data ready for research cohort queries and AI-powered clinical insights
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -575,7 +709,7 @@ function App() {
         Query the OMOP-transformed data to build research cohorts based on clinical criteria.
       </p>
 
-      {pipelineResult ? (
+      {(pipelineResult || uploadResult) ? (
         <>
           <div className="pipeline-controls">
             <select
@@ -629,7 +763,7 @@ function App() {
         </>
       ) : (
         <div className="result-card">
-          <p>Run the pipeline first to enable cohort queries.</p>
+          <p>Run the pipeline or upload a CSV first to enable cohort queries.</p>
         </div>
       )}
     </div>
@@ -642,7 +776,7 @@ function App() {
         AI-powered analysis of patient encounters generating actionable clinical insights.
       </p>
 
-      {pipelineResult ? (
+      {(pipelineResult || uploadResult) ? (
         <>
           <div className="pipeline-controls">
             <input
@@ -751,7 +885,7 @@ function App() {
         </>
       ) : (
         <div className="result-card">
-          <p>Run the pipeline first to enable AI analysis.</p>
+          <p>Run the pipeline or upload a CSV first to enable AI analysis.</p>
         </div>
       )}
     </div>
