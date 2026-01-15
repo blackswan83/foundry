@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis, PatientInfo } from './services/api';
 import FoundryLanding from './components/FoundryLanding';
 
-type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality';
+type TabType = 'home' | 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality';
 type PipelineMode = 'demo' | 'upload';
 
 const PIPELINE_STEPS = [
@@ -24,7 +24,7 @@ const UPLOAD_STEPS = [
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('pipeline');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
   const [pipelineMode, setPipelineMode] = useState<PipelineMode>('demo');
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -51,7 +51,6 @@ function App() {
   const [dataQuality, setDataQuality] = useState<Record<string, unknown> | null>(null);
   const [qualityMetrics, setQualityMetrics] = useState<Record<string, unknown> | null>(null);
   const [patientList, setPatientList] = useState<PatientInfo[]>([]);
-  const [showLanding, setShowLanding] = useState(true);
 
   const runPipeline = async () => {
     setLoading(true);
@@ -1187,11 +1186,6 @@ function App() {
     </div>
   );
 
-  // Show landing page or main app
-  if (showLanding) {
-    return <FoundryLanding onStartDemo={() => setShowLanding(false)} />;
-  }
-
   return (
     <div className="container">
       <header className="header">
@@ -1204,6 +1198,9 @@ function App() {
       </header>
 
       <div className="tabs">
+        <button className={`tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+          Home
+        </button>
         <button className={`tab ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
           Pipeline
         </button>
@@ -1230,6 +1227,7 @@ function App() {
         </button>
       </div>
 
+      {activeTab === 'home' && <FoundryLanding onStartDemo={() => setActiveTab('pipeline')} />}
       {activeTab === 'pipeline' && renderPipelineTab()}
       {activeTab === 'linkage' && renderLinkageTab()}
       {activeTab === 'deidentification' && renderDeidentificationTab()}
