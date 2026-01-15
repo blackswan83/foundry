@@ -299,6 +299,49 @@ body {
   color: white;
 }
 
+/* Enter Demo button - styled differently */
+.tab.enter-demo-btn {
+  background: linear-gradient(135deg, #8B7355 0%, #6B5B4F 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 20px;
+  margin-left: auto;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.3);
+}
+
+.tab.enter-demo-btn:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.4);
+  background: linear-gradient(135deg, #9B8365 0%, #7B6B5F 100%);
+}
+
+/* Demo tabs animation */
+@keyframes slideInTab {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab.demo-tab {
+  animation: slideInTab 0.3s ease forwards;
+}
+
+.tab.demo-tab:nth-child(2) { animation-delay: 0.02s; }
+.tab.demo-tab:nth-child(3) { animation-delay: 0.04s; }
+.tab.demo-tab:nth-child(4) { animation-delay: 0.06s; }
+.tab.demo-tab:nth-child(5) { animation-delay: 0.08s; }
+.tab.demo-tab:nth-child(6) { animation-delay: 0.10s; }
+.tab.demo-tab:nth-child(7) { animation-delay: 0.12s; }
+.tab.demo-tab:nth-child(8) { animation-delay: 0.14s; }
+.tab.demo-tab:nth-child(9) { animation-delay: 0.16s; }
+
 .demo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1201,30 +1201,38 @@ function App() {
         <button className={`tab ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
           Home
         </button>
-        <button className={`tab ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
-          Pipeline
-        </button>
-        <button className={`tab ${activeTab === 'linkage' ? 'active' : ''}`} onClick={() => setActiveTab('linkage')}>
-          Patient Linkage
-        </button>
-        <button className={`tab ${activeTab === 'deidentification' ? 'active' : ''}`} onClick={() => setActiveTab('deidentification')}>
-          De-identification
-        </button>
-        <button className={`tab ${activeTab === 'omop' ? 'active' : ''}`} onClick={() => setActiveTab('omop')}>
-          OMOP Transform
-        </button>
-        <button className={`tab ${activeTab === 'cohort' ? 'active' : ''}`} onClick={() => setActiveTab('cohort')}>
-          Cohort Queries
-        </button>
-        <button className={`tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
-          AI Insights
-        </button>
-        <button className={`tab ${activeTab === 'executive' ? 'active' : ''}`} onClick={() => setActiveTab('executive')}>
-          Executive Dashboard
-        </button>
-        <button className={`tab ${activeTab === 'quality' ? 'active' : ''}`} onClick={() => setActiveTab('quality')}>
-          Data Quality
-        </button>
+        {activeTab === 'home' ? (
+          <button className="tab enter-demo-btn" onClick={() => setActiveTab('pipeline')}>
+            Enter Demo →
+          </button>
+        ) : (
+          <>
+            <button className={`tab demo-tab ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
+              Pipeline
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'linkage' ? 'active' : ''}`} onClick={() => setActiveTab('linkage')}>
+              Patient Linkage
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'deidentification' ? 'active' : ''}`} onClick={() => setActiveTab('deidentification')}>
+              De-identification
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'omop' ? 'active' : ''}`} onClick={() => setActiveTab('omop')}>
+              OMOP Transform
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'cohort' ? 'active' : ''}`} onClick={() => setActiveTab('cohort')}>
+              Cohort Queries
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
+              AI Insights
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'executive' ? 'active' : ''}`} onClick={() => setActiveTab('executive')}>
+              Executive
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'quality' ? 'active' : ''}`} onClick={() => setActiveTab('quality')}>
+              Data Quality
+            </button>
+          </>
+        )}
       </div>
 
       {activeTab === 'home' && <FoundryLanding onStartDemo={() => setActiveTab('pipeline')} />}
