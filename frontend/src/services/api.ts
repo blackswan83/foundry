@@ -37,6 +37,19 @@ export interface CohortResult {
   };
 }
 
+export interface PatientInfo {
+  person_id: number;
+  age: number;
+  gender: string;
+  region: string;
+  display_name: string;
+}
+
+export interface PatientListResponse {
+  total_patients: number;
+  patients: PatientInfo[];
+}
+
 export interface PatientAnalysis {
   patient_token: string;
   summary: {
@@ -199,6 +212,12 @@ export const api = {
   async getReadmissionRisk(personId: number): Promise<Record<string, unknown>> {
     const response = await fetch(`${API_BASE}/demo/readmission-risk/${personId}`);
     if (!response.ok) throw new Error('Failed to fetch readmission risk');
+    return response.json();
+  },
+
+  async getPatientList(): Promise<PatientListResponse> {
+    const response = await fetch(`${API_BASE}/demo/patient-list`);
+    if (!response.ok) throw new Error('Failed to fetch patient list');
     return response.json();
   },
 };

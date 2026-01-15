@@ -539,6 +539,63 @@ async def reset_demo():
     return {"status": "success", "message": "Demo data cleared"}
 
 
+# ============ Patient List & Demographics Endpoints ============
+
+@router.get("/demo/patient-list")
+async def get_patient_list():
+    """
+    Get list of all patients with demographics for the patient selector.
+    Returns person_id, age, gender, and region for each patient.
+    """
+    if "omop_data" not in _demo_data_cache:
+        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+
+    omop_data = _demo_data_cache["omop_data"]
+    deidentified = _demo_data_cache.get("deidentified_data", {})
+
+    persons = omop_data.get("person", [])
+    deidentified_patients = deidentified.get("patients", [])
+
+    # Create a lookup from patient_token to region
+    token_to_region = {}
+    for dp in deidentified_patients:
+        token = dp.get("patient_token", "")
+        region = dp.get("region", "Unknown")
+        token_to_region[token] = region
+
+    # Build patient list
+    from datetime import datetime
+    current_year = datetime.now().year
+    gender_map = {8507: "Male", 8532: "Female", 8551: "Unknown"}
+
+    patient_list = []
+    for person in persons:
+        person_id = person.get("person_id")
+        year_of_birth = person.get("year_of_birth", current_year)
+        age = current_year - year_of_birth
+        gender = gender_map.get(person.get("gender_concept_id", 8551), "Unknown")
+
+        # Get region from deidentified data via token
+        token = person.get("person_source_value", "")
+        region = token_to_region.get(token, "Unknown")
+
+        patient_list.append({
+            "person_id": person_id,
+            "age": age,
+            "gender": gender,
+            "region": region,
+            "display_name": f"Patient {person_id} ({age}y {gender[0]}, {region})"
+        })
+
+    # Sort by person_id
+    patient_list.sort(key=lambda x: x["person_id"])
+
+    return {
+        "total_patients": len(patient_list),
+        "patients": patient_list
+    }
+
+
 # ============ Quality Metrics & Executive Dashboard Endpoints ============
 
 @router.get("/demo/quality-metrics")

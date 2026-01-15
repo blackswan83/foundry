@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { api, PipelineResult, CohortResult, PatientAnalysis } from './services/api';
+import { api, PipelineResult, CohortResult, PatientAnalysis, PatientInfo } from './services/api';
 
 type TabType = 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality';
 type PipelineMode = 'demo' | 'upload';
@@ -49,6 +49,7 @@ function App() {
   const [executiveSummary, setExecutiveSummary] = useState<Record<string, unknown> | null>(null);
   const [dataQuality, setDataQuality] = useState<Record<string, unknown> | null>(null);
   const [qualityMetrics, setQualityMetrics] = useState<Record<string, unknown> | null>(null);
+  const [patientList, setPatientList] = useState<PatientInfo[]>([]);
 
   const runPipeline = async () => {
     setLoading(true);
@@ -76,7 +77,7 @@ function App() {
       await sleep(300);
 
       // Load demos after pipeline
-      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics] = await Promise.all([
+      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics, patients] = await Promise.all([
         api.getLinkageDemo(),
         api.getDeidentificationDemo(),
         api.getOMOPTransformationDemo(),
@@ -85,6 +86,7 @@ function App() {
         api.getExecutiveSummary(),
         api.getDataQuality(),
         api.getQualityMetrics(),
+        api.getPatientList(),
       ]);
       setLinkageDemo(linkage);
       setDeidDemo(deid);
@@ -94,6 +96,10 @@ function App() {
       setExecutiveSummary(execSummary);
       setDataQuality(dataQual);
       setQualityMetrics(qualMetrics);
+      setPatientList(patients.patients);
+      if (patients.patients.length > 0) {
+        setSelectedPatient(patients.patients[0].person_id);
+      }
       if (queries.queries.length > 0) {
         setSelectedQuery(queries.queries[0].id);
       }
@@ -154,6 +160,7 @@ function App() {
     setExecutiveSummary(null);
     setDataQuality(null);
     setQualityMetrics(null);
+    setPatientList([]);
     setCompletedSteps([]);
     setCurrentStep(0);
   };
@@ -184,7 +191,7 @@ function App() {
 
       // Load demos after upload
       await sleep(300);
-      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics] = await Promise.all([
+      const [linkage, deid, omop, queries, analyticsData, execSummary, dataQual, qualMetrics, patients] = await Promise.all([
         api.getLinkageDemo(),
         api.getDeidentificationDemo(),
         api.getOMOPTransformationDemo(),
@@ -193,6 +200,7 @@ function App() {
         api.getExecutiveSummary(),
         api.getDataQuality(),
         api.getQualityMetrics(),
+        api.getPatientList(),
       ]);
       setLinkageDemo(linkage);
       setDeidDemo(deid);
@@ -202,6 +210,10 @@ function App() {
       setExecutiveSummary(execSummary);
       setDataQuality(dataQual);
       setQualityMetrics(qualMetrics);
+      setPatientList(patients.patients);
+      if (patients.patients.length > 0) {
+        setSelectedPatient(patients.patients[0].person_id);
+      }
       if (queries.queries.length > 0) {
         setSelectedQuery(queries.queries[0].id);
       }
@@ -804,29 +816,74 @@ function App() {
   const renderAITab = () => (
     <div className="results-section">
       <h2>AI Clinical Intelligence</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
         AI-powered analysis of patient encounters generating actionable clinical insights.
       </p>
 
+      {/* Explanation of what AI analysis does */}
+      <div className="result-card" style={{ marginBottom: '1.5rem', background: 'var(--bg-tertiary)' }}>
+        <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>What This Analysis Provides</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem', fontSize: '0.85rem' }}>
+          <div>
+            <strong style={{ color: 'var(--primary)' }}>Lab Value Analysis</strong>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+              Detects critical high/low values and trends in glucose, creatinine, hemoglobin, potassium, HbA1c
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--primary)' }}>Drug Safety</strong>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+              Identifies 27 known drug-drug interactions (e.g., warfarin + aspirin, metformin + contrast)
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--primary)' }}>Quality Metrics</strong>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+              Evaluates care compliance (HbA1c monitoring for diabetics, blood pressure control)
+            </p>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--primary)' }}>Visit Patterns</strong>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+              Flags frequent ER visits, care gaps, and hospitalization patterns
+            </p>
+          </div>
+        </div>
+      </div>
+
       {(pipelineResult || uploadResult) ? (
         <>
-          <div className="pipeline-controls">
-            <input
-              type="number"
-              value={selectedPatient}
-              onChange={(e) => setSelectedPatient(parseInt(e.target.value) || 1)}
-              min={1}
-              max={(analytics as { data_summary?: { total_persons?: number } })?.data_summary?.total_persons || 1000}
-              style={{
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg-card)',
-                color: 'var(--text-primary)',
-                width: '120px',
-              }}
-            />
-            <button className="btn btn-primary" onClick={analyzePatient} disabled={loading}>
+          <div className="pipeline-controls" style={{ alignItems: 'center', gap: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                Select a patient to analyze:
+              </label>
+              <select
+                value={selectedPatient}
+                onChange={(e) => setSelectedPatient(parseInt(e.target.value))}
+                style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  width: '100%',
+                  maxWidth: '400px',
+                  cursor: 'pointer',
+                }}
+              >
+                {patientList.length > 0 ? (
+                  patientList.map((patient) => (
+                    <option key={patient.person_id} value={patient.person_id}>
+                      {patient.display_name}
+                    </option>
+                  ))
+                ) : (
+                  <option value={selectedPatient}>Patient {selectedPatient}</option>
+                )}
+              </select>
+            </div>
+            <button className="btn btn-primary" onClick={analyzePatient} disabled={loading} style={{ marginTop: '1.5rem' }}>
               {loading ? <span className="loading-spinner"></span> : 'Analyze Patient'}
             </button>
           </div>
@@ -843,6 +900,10 @@ function App() {
                   <div className="stat-item">
                     <div className="value">{patientAnalysis.summary.demographics.gender}</div>
                     <div className="label">Gender</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="value">{patientList.find(p => p.person_id === selectedPatient)?.region || 'Unknown'}</div>
+                    <div className="label">Region</div>
                   </div>
                   <div className="stat-item">
                     <div className="value">{patientAnalysis.summary.clinical_summary.total_visits}</div>
