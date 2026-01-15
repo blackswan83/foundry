@@ -13,6 +13,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .api import router
 
@@ -58,13 +61,43 @@ Or run the full pipeline: `POST /api/demo/full-pipeline`
 )
 
 # CORS middleware for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Set ALLOWED_ORIGINS env var to override default
+# Default: allows *.railway.app and *.nuraxi.ai domains
+
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "").strip()
+
+if allowed_origins_env:
+    # Use specific origins from environment variable (comma-separated)
+    allowed_origins = [
+        origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()
+    ]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Content-Type", "Authorization"],
+        expose_headers=["Content-Disposition"],
+    )
+else:
+    # Default: allow *.railway.app, *.nuraxi.ai, and localhost (for local development)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|.*\.railway\.app|.*\.nuraxi\.ai)(:\d+)?$",
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Content-Type", "Authorization"],
+        expose_headers=["Content-Disposition"],
+    )
+
+# Rate limiting middleware
+# Limits requests per IP address to prevent DoS attacks
+# Configure limits via RATE_LIMIT env var (default: "100/minute")
+# Format: "number/period" e.g., "100/minute", "10/second", "1000/hour"
+rate_limit_str = os.getenv("RATE_LIMIT", "100/minute")
+limiter = Limiter(key_func=get_remote_address, default_limits=[rate_limit_str])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include API routes
 app.include_router(router, prefix="/api")
@@ -110,6 +143,7 @@ if FRONTEND_DIR.exists():
         # Return index.html for SPA routing
         return FileResponse(FRONTEND_DIR / "index.html")
 else:
+
     @app.get("/")
     async def root():
         """Root endpoint with demo information."""

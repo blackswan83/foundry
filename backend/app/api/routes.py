@@ -4,9 +4,9 @@ API Routes for the Nuraxi Foundry Demo
 Provides REST endpoints for demonstrating all platform capabilities.
 """
 
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Request
 from fastapi.responses import Response
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel
 
 from ..services import (
@@ -36,6 +36,7 @@ _demo_data_cache = {}
 
 class DemoDataRequest(BaseModel):
     """Request for generating demo data."""
+
     num_single_system_patients: int = 20
     num_multi_system_patients: int = 10
     seed: Optional[int] = 42
@@ -43,10 +44,12 @@ class DemoDataRequest(BaseModel):
 
 class CohortQueryRequest(BaseModel):
     """Request for custom cohort query."""
+
     query_name: str
 
 
 # ============ Data Generation Endpoints ============
+
 
 @router.post("/demo/generate-data")
 async def generate_demo_data(request: DemoDataRequest):
@@ -68,7 +71,9 @@ async def generate_demo_data(request: DemoDataRequest):
         "status": "success",
         "message": "Synthetic patient data generated",
         "summary": raw_data["summary"],
-        "sample_patient": raw_data["patients"][0].model_dump() if raw_data["patients"] else None,
+        "sample_patient": raw_data["patients"][0].model_dump()
+        if raw_data["patients"]
+        else None,
     }
 
 
@@ -76,12 +81,16 @@ async def generate_demo_data(request: DemoDataRequest):
 async def get_raw_data_summary():
     """Get summary of the generated raw data."""
     if "raw_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="No data generated yet. Call /demo/generate-data first.")
+        raise HTTPException(
+            status_code=404,
+            detail="No data generated yet. Call /demo/generate-data first.",
+        )
 
     return _demo_data_cache["raw_data"]["summary"]
 
 
 # ============ Tokenization Endpoints ============
+
 
 @router.post("/demo/tokenize")
 async def tokenize_patients():
@@ -90,7 +99,10 @@ async def tokenize_patients():
     Links fragmented records from multiple hospital systems.
     """
     if "raw_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="No data generated yet. Call /demo/generate-data first.")
+        raise HTTPException(
+            status_code=404,
+            detail="No data generated yet. Call /demo/generate-data first.",
+        )
 
     patients = _demo_data_cache["raw_data"]["patients"]
 
@@ -98,7 +110,9 @@ async def tokenize_patients():
     result = tokenization_service.demonstrate_linkage(patients)
 
     # Store tokens for later use
-    _demo_data_cache["patient_tokens"] = tokenization_service.tokenize_patient_batch(patients)
+    _demo_data_cache["patient_tokens"] = tokenization_service.tokenize_patient_batch(
+        patients
+    )
     _demo_data_cache["linked_patients"] = result["linked_record_details"]
 
     return {
@@ -149,6 +163,7 @@ async def demonstrate_linkage():
 
 # ============ De-identification Endpoints ============
 
+
 @router.post("/demo/deidentify")
 async def deidentify_data():
     """
@@ -156,7 +171,10 @@ async def deidentify_data():
     Transforms PHI into research-ready anonymous data.
     """
     if "raw_data" not in _demo_data_cache or "patient_tokens" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="Data not ready. Run /demo/generate-data and /demo/tokenize first.")
+        raise HTTPException(
+            status_code=404,
+            detail="Data not ready. Run /demo/generate-data and /demo/tokenize first.",
+        )
 
     raw_data = _demo_data_cache["raw_data"]
     tokens = _demo_data_cache["patient_tokens"]
@@ -177,7 +195,9 @@ async def deidentify_data():
         "status": "success",
         "message": "Data de-identified using Safe Harbor + HiPS methodology",
         "report": report,
-        "sample_deidentified_patient": deidentified["patients"][0] if deidentified["patients"] else None,
+        "sample_deidentified_patient": deidentified["patients"][0]
+        if deidentified["patients"]
+        else None,
     }
 
 
@@ -210,13 +230,17 @@ async def demonstrate_deidentification():
 
 # ============ OMOP Transformation Endpoints ============
 
+
 @router.post("/demo/transform-to-omop")
 async def transform_to_omop():
     """
     Transform de-identified data into OMOP Common Data Model format.
     """
     if "deidentified_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="Data not de-identified yet. Run /demo/deidentify first.")
+        raise HTTPException(
+            status_code=404,
+            detail="Data not de-identified yet. Run /demo/deidentify first.",
+        )
 
     deidentified = _demo_data_cache["deidentified_data"]
 
@@ -267,8 +291,12 @@ async def demonstrate_omop_transformation():
 
     # Demo lab transformation
     lab_obs = next(
-        (o for o in deidentified["observations"] if o.get("observation_type") == "lab_result"),
-        None
+        (
+            o
+            for o in deidentified["observations"]
+            if o.get("observation_type") == "lab_result"
+        ),
+        None,
     )
     if lab_obs:
         lab_demo = omop_transformer.demonstrate_transformation(lab_obs, "lab_result")
@@ -285,6 +313,7 @@ async def demonstrate_omop_transformation():
 
 # ============ Cohort Query Endpoints ============
 
+
 @router.get("/demo/cohort/available-queries")
 async def get_available_queries():
     """Get list of available predefined cohort queries."""
@@ -297,7 +326,10 @@ async def get_available_queries():
 async def run_cohort_query(request: CohortQueryRequest):
     """Run a predefined cohort query."""
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run /demo/transform-to-omop first.")
+        raise HTTPException(
+            status_code=404,
+            detail="OMOP data not ready. Run /demo/transform-to-omop first.",
+        )
 
     # Ensure cohort service has current data
     cohort_service.load_omop_data(_demo_data_cache["omop_data"])
@@ -326,6 +358,7 @@ async def get_analytics():
 
 # ============ Clinical AI Endpoints ============
 
+
 @router.get("/demo/ai/analyze-patient/{person_id}")
 async def analyze_patient(person_id: int):
     """
@@ -343,10 +376,20 @@ async def analyze_patient(person_id: int):
         raise HTTPException(status_code=404, detail=f"Person {person_id} not found")
 
     # Get related data
-    visits = [v for v in omop_data.get("visit_occurrence", []) if v["person_id"] == person_id]
-    conditions = [c for c in omop_data.get("condition_occurrence", []) if c["person_id"] == person_id]
-    measurements = [m for m in omop_data.get("measurement", []) if m["person_id"] == person_id]
-    drugs = [d for d in omop_data.get("drug_exposure", []) if d["person_id"] == person_id]
+    visits = [
+        v for v in omop_data.get("visit_occurrence", []) if v["person_id"] == person_id
+    ]
+    conditions = [
+        c
+        for c in omop_data.get("condition_occurrence", [])
+        if c["person_id"] == person_id
+    ]
+    measurements = [
+        m for m in omop_data.get("measurement", []) if m["person_id"] == person_id
+    ]
+    drugs = [
+        d for d in omop_data.get("drug_exposure", []) if d["person_id"] == person_id
+    ]
 
     # Run analysis
     result = clinical_ai.analyze_patient_data(
@@ -401,11 +444,15 @@ async def analyze_cohort(request: CohortQueryRequest):
 
 # ============ Full Pipeline Demo Endpoint ============
 
+
 @router.post("/demo/full-pipeline")
 async def run_full_pipeline(
+    request: Request,
     num_patients: int = Query(default=30, ge=5, le=100),
     seed: int = Query(default=42),
 ):
+    # Rate limit: 10 requests per minute per IP
+    # The global rate limit from main.py applies, but we can add endpoint-specific checks here if needed
     """
     Run the complete demo pipeline:
     1. Generate synthetic Saudi patient data
@@ -434,23 +481,27 @@ async def run_full_pipeline(
             num_multi_system_patients=int(num_patients * 0.3),
         )
         _demo_data_cache["raw_data"] = raw_data
-        results["pipeline_steps"].append({
-            "step": 1,
-            "name": "Data Generation",
-            "status": "completed",
-            "result": raw_data["summary"],
-        })
+        results["pipeline_steps"].append(
+            {
+                "step": 1,
+                "name": "Data Generation",
+                "status": "completed",
+                "result": raw_data["summary"],
+            }
+        )
 
         # Step 2: Tokenization
         tokens = tokenization_service.tokenize_patient_batch(raw_data["patients"])
         _demo_data_cache["patient_tokens"] = tokens
         linkage_result = tokenization_service.demonstrate_linkage(raw_data["patients"])
-        results["pipeline_steps"].append({
-            "step": 2,
-            "name": "Patient Linkage (Tokenization)",
-            "status": "completed",
-            "result": linkage_result["statistics"],
-        })
+        results["pipeline_steps"].append(
+            {
+                "step": 2,
+                "name": "Patient Linkage (Tokenization)",
+                "status": "completed",
+                "result": linkage_result["statistics"],
+            }
+        )
 
         # Step 3: De-identification
         deidentified = deid_service.deidentify_dataset(
@@ -461,42 +512,48 @@ async def run_full_pipeline(
         )
         _demo_data_cache["deidentified_data"] = deidentified
         deid_report = deid_service.get_deidentification_report()
-        results["pipeline_steps"].append({
-            "step": 3,
-            "name": "De-identification (Safe Harbor + HiPS)",
-            "status": "completed",
-            "result": {
-                "patients_deidentified": deid_report["total_patients_deidentified"],
-                "method": deid_report["pdpl_compliance"]["method"],
-            },
-        })
+        results["pipeline_steps"].append(
+            {
+                "step": 3,
+                "name": "De-identification (Safe Harbor + HiPS)",
+                "status": "completed",
+                "result": {
+                    "patients_deidentified": deid_report["total_patients_deidentified"],
+                    "method": deid_report["pdpl_compliance"]["method"],
+                },
+            }
+        )
 
         # Step 4: OMOP Transformation
         omop_data = omop_transformer.transform_dataset(deidentified)
         _demo_data_cache["omop_data"] = omop_data
         cohort_service.load_omop_data(omop_data)
         omop_report = omop_transformer.get_transformation_report()
-        results["pipeline_steps"].append({
-            "step": 4,
-            "name": "OMOP CDM Transformation",
-            "status": "completed",
-            "result": {
-                "persons": omop_report["unique_persons_created"],
-                "visits": omop_report["visits_created"],
-                "conditions": omop_report["conditions_created"],
-                "measurements": omop_report["measurements_created"],
-                "drugs": omop_report["drug_exposures_created"],
-            },
-        })
+        results["pipeline_steps"].append(
+            {
+                "step": 4,
+                "name": "OMOP CDM Transformation",
+                "status": "completed",
+                "result": {
+                    "persons": omop_report["unique_persons_created"],
+                    "visits": omop_report["visits_created"],
+                    "conditions": omop_report["conditions_created"],
+                    "measurements": omop_report["measurements_created"],
+                    "drugs": omop_report["drug_exposures_created"],
+                },
+            }
+        )
 
         # Step 5: Analytics
         analytics = cohort_service.get_analytics_summary()
-        results["pipeline_steps"].append({
-            "step": 5,
-            "name": "Analytics & Research Capabilities",
-            "status": "completed",
-            "result": analytics["data_summary"],
-        })
+        results["pipeline_steps"].append(
+            {
+                "step": 5,
+                "name": "Analytics & Research Capabilities",
+                "status": "completed",
+                "result": analytics["data_summary"],
+            }
+        )
 
         results["overall_status"] = "completed"
         results["message"] = "Full pipeline executed successfully"
@@ -509,6 +566,7 @@ async def run_full_pipeline(
 
 
 # ============ Demo Status Endpoint ============
+
 
 @router.get("/demo/status")
 async def get_demo_status():
@@ -526,7 +584,13 @@ async def get_demo_status():
 @router.delete("/demo/reset")
 async def reset_demo():
     """Reset all demo data and start fresh."""
-    global _demo_data_cache, omop_transformer, cohort_service, clinical_ai, deid_service, tokenization_service
+    global \
+        _demo_data_cache, \
+        omop_transformer, \
+        cohort_service, \
+        clinical_ai, \
+        deid_service, \
+        tokenization_service
     _demo_data_cache = {}
 
     # Reset all service instances to clear state (especially person_id counters)
@@ -541,6 +605,7 @@ async def reset_demo():
 
 # ============ Patient List & Demographics Endpoints ============
 
+
 @router.get("/demo/patient-list")
 async def get_patient_list():
     """
@@ -548,7 +613,9 @@ async def get_patient_list():
     Returns person_id, age, gender, and region for each patient.
     """
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+        raise HTTPException(
+            status_code=404, detail="OMOP data not ready. Run the pipeline first."
+        )
 
     omop_data = _demo_data_cache["omop_data"]
     deidentified = _demo_data_cache.get("deidentified_data", {})
@@ -565,6 +632,7 @@ async def get_patient_list():
 
     # Build patient list
     from datetime import datetime
+
     current_year = datetime.now().year
     gender_map = {8507: "Male", 8532: "Female", 8551: "Unknown"}
 
@@ -579,24 +647,24 @@ async def get_patient_list():
         token = person.get("person_source_value", "")
         region = token_to_region.get(token, "Unknown")
 
-        patient_list.append({
-            "person_id": person_id,
-            "age": age,
-            "gender": gender,
-            "region": region,
-            "display_name": f"Patient {person_id} ({age}y {gender[0]}, {region})"
-        })
+        patient_list.append(
+            {
+                "person_id": person_id,
+                "age": age,
+                "gender": gender,
+                "region": region,
+                "display_name": f"Patient {person_id} ({age}y {gender[0]}, {region})",
+            }
+        )
 
     # Sort by person_id
     patient_list.sort(key=lambda x: x["person_id"])
 
-    return {
-        "total_patients": len(patient_list),
-        "patients": patient_list
-    }
+    return {"total_patients": len(patient_list), "patients": patient_list}
 
 
 # ============ Quality Metrics & Executive Dashboard Endpoints ============
+
 
 @router.get("/demo/quality-metrics")
 async def get_quality_metrics():
@@ -605,7 +673,9 @@ async def get_quality_metrics():
     Shows evidence gaps and compliance rates for key clinical measures.
     """
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+        raise HTTPException(
+            status_code=404, detail="OMOP data not ready. Run the pipeline first."
+        )
 
     return clinical_ai.calculate_quality_metrics(_demo_data_cache["omop_data"])
 
@@ -616,7 +686,9 @@ async def get_data_quality():
     Get data quality scorecard showing mapping and completeness rates.
     """
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+        raise HTTPException(
+            status_code=404, detail="OMOP data not ready. Run the pipeline first."
+        )
 
     omop_data = _demo_data_cache["omop_data"]
 
@@ -628,15 +700,18 @@ async def get_data_quality():
 
     # Demographics completeness
     complete_demographics = sum(
-        1 for p in persons
-        if p.get("gender_concept_id") and p.get("year_of_birth")
+        1 for p in persons if p.get("gender_concept_id") and p.get("year_of_birth")
     )
 
     # SNOMED mapping (conditions with valid concept_id)
-    mapped_conditions = sum(1 for c in conditions if c.get("condition_concept_id", 0) > 0)
+    mapped_conditions = sum(
+        1 for c in conditions if c.get("condition_concept_id", 0) > 0
+    )
 
     # LOINC mapping (measurements with valid concept_id)
-    mapped_measurements = sum(1 for m in measurements if m.get("measurement_concept_id", 0) > 0)
+    mapped_measurements = sum(
+        1 for m in measurements if m.get("measurement_concept_id", 0) > 0
+    )
 
     # RxNorm mapping (drugs with valid concept_id)
     mapped_drugs = sum(1 for d in drugs if d.get("drug_concept_id", 0) > 0)
@@ -651,7 +726,9 @@ async def get_data_quality():
     loinc_rate = round(mapped_measurements / total_measurements * 100, 1)
     rxnorm_rate = round(mapped_drugs / total_drugs * 100, 1)
 
-    overall_score = round((demographics_rate + snomed_rate + loinc_rate + rxnorm_rate) / 4, 1)
+    overall_score = round(
+        (demographics_rate + snomed_rate + loinc_rate + rxnorm_rate) / 4, 1
+    )
 
     return {
         "overall_quality_score": overall_score,
@@ -661,36 +738,36 @@ async def get_data_quality():
                 "rate": demographics_rate,
                 "numerator": complete_demographics,
                 "denominator": total_persons,
-                "status": "good" if demographics_rate >= 90 else "needs_attention"
+                "status": "good" if demographics_rate >= 90 else "needs_attention",
             },
             "snomed_mapping": {
                 "name": "Diagnosis → SNOMED Mapping",
                 "rate": snomed_rate,
                 "numerator": mapped_conditions,
                 "denominator": total_conditions,
-                "status": "good" if snomed_rate >= 80 else "needs_attention"
+                "status": "good" if snomed_rate >= 80 else "needs_attention",
             },
             "loinc_mapping": {
                 "name": "Labs → LOINC Mapping",
                 "rate": loinc_rate,
                 "numerator": mapped_measurements,
                 "denominator": total_measurements,
-                "status": "good" if loinc_rate >= 80 else "needs_attention"
+                "status": "good" if loinc_rate >= 80 else "needs_attention",
             },
             "rxnorm_mapping": {
                 "name": "Medications → RxNorm Mapping",
                 "rate": rxnorm_rate,
                 "numerator": mapped_drugs,
                 "denominator": total_drugs,
-                "status": "good" if rxnorm_rate >= 80 else "needs_attention"
-            }
+                "status": "good" if rxnorm_rate >= 80 else "needs_attention",
+            },
         },
         "summary": {
             "total_persons": total_persons,
             "total_conditions": total_conditions,
             "total_measurements": total_measurements,
-            "total_drugs": total_drugs
-        }
+            "total_drugs": total_drugs,
+        },
     }
 
 
@@ -700,7 +777,9 @@ async def get_executive_summary():
     Get executive dashboard with key metrics for leadership presentations.
     """
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+        raise HTTPException(
+            status_code=404, detail="OMOP data not ready. Run the pipeline first."
+        )
 
     omop_data = _demo_data_cache["omop_data"]
     raw_data = _demo_data_cache.get("raw_data", {})
@@ -715,14 +794,20 @@ async def get_executive_summary():
     raw_patients = raw_data.get("patients", [])
     unique_persons = len(persons)
     total_records = len(raw_patients) if raw_patients else unique_persons
-    linkage_rate = round((1 - unique_persons / max(total_records, 1)) * 100 + 100, 1) if total_records > unique_persons else 100.0
+    linkage_rate = (
+        round((1 - unique_persons / max(total_records, 1)) * 100 + 100, 1)
+        if total_records > unique_persons
+        else 100.0
+    )
 
     # Top conditions
     condition_counts = {}
     for c in conditions:
         source = c.get("condition_source_value", "Unknown")
         condition_counts[source] = condition_counts.get(source, 0) + 1
-    top_conditions = sorted(condition_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_conditions = sorted(condition_counts.items(), key=lambda x: x[1], reverse=True)[
+        :5
+    ]
 
     # Top medications
     drug_counts = {}
@@ -747,30 +832,38 @@ async def get_executive_summary():
             "unique_individuals_identified": unique_persons,
             "cross_system_linkage_rate": f"{linkage_rate:.0f}%",
             "deidentification_completeness": "100%",
-            "omop_transformation_success": "100%"
+            "omop_transformation_success": "100%",
         },
         "clinical_summary": {
             "total_visits": len(visits),
             "total_conditions": len(conditions),
             "total_lab_results": len(measurements),
-            "total_medications": len(drugs)
+            "total_medications": len(drugs),
         },
         "top_conditions": [
-            {"condition": name, "count": count, "percentage": f"{count/len(conditions)*100:.1f}%"}
+            {
+                "condition": name,
+                "count": count,
+                "percentage": f"{count / len(conditions) * 100:.1f}%",
+            }
             for name, count in top_conditions
         ],
         "top_medications": [
-            {"medication": name, "count": count, "percentage": f"{count/len(drugs)*100:.1f}%"}
+            {
+                "medication": name,
+                "count": count,
+                "percentage": f"{count / len(drugs) * 100:.1f}%",
+            }
             for name, count in top_medications
         ],
         "quality_metrics": {
             "overall_score": quality["overall_quality_score"],
             "gaps_identified": quality["gaps_identified"],
-            "metrics_met": quality["metrics_met"]
+            "metrics_met": quality["metrics_met"],
         },
         "risk_stratification": {
             "high_risk_patients": high_risk_count,
-            "percentage": f"{high_risk_count/max(unique_persons,1)*100:.1f}%"
+            "percentage": f"{high_risk_count / max(unique_persons, 1) * 100:.1f}%",
         },
         "platform_capabilities_demonstrated": [
             "Cross-System Patient Linkage via Tokenization",
@@ -778,8 +871,8 @@ async def get_executive_summary():
             "OMOP CDM v5.4 Transformation",
             "Clinical Quality Metrics",
             "AI-Powered Risk Stratification",
-            "Research-Ready Data Output"
-        ]
+            "Research-Ready Data Output",
+        ],
     }
 
 
@@ -789,19 +882,26 @@ async def get_readmission_risk(person_id: int):
     Get readmission risk assessment for a specific patient.
     """
     if "omop_data" not in _demo_data_cache:
-        raise HTTPException(status_code=404, detail="OMOP data not ready. Run the pipeline first.")
+        raise HTTPException(
+            status_code=404, detail="OMOP data not ready. Run the pipeline first."
+        )
 
     persons = _demo_data_cache["omop_data"].get("person", [])
     if not any(p["person_id"] == person_id for p in persons):
         raise HTTPException(status_code=404, detail=f"Person {person_id} not found")
 
-    return clinical_ai.calculate_readmission_risk(person_id, _demo_data_cache["omop_data"])
+    return clinical_ai.calculate_readmission_risk(
+        person_id, _demo_data_cache["omop_data"]
+    )
 
 
 # ============ CSV Upload/Download Endpoints ============
 
+
 @router.post("/demo/upload-csv")
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_csv(request: Request, file: UploadFile = File(...)):
+    # Rate limit: The global rate limit applies (configurable via RATE_LIMIT env var)
+    # For stricter limits on this endpoint, we could add additional checks here
     """
     Upload a CSV file containing patient data for de-identification.
 
@@ -816,18 +916,29 @@ async def upload_csv(file: UploadFile = File(...)):
     """
     global _demo_data_cache, omop_transformer, tokenization_service
 
+    # Security: File size limit (10MB) to prevent DoS attacks
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
     # Reset services to ensure fresh state (person_id counters start at 0)
     omop_transformer = OMOPTransformer()
     tokenization_service = TokenizationService()
 
     # Validate file type
-    if not file.filename or not file.filename.endswith('.csv'):
+    if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="File must be a CSV file")
 
-    # Read file content
+    # Read file content with size check
     try:
         content = await file.read()
-        csv_content = content.decode('utf-8')
+
+        # Check file size before processing
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE / (1024 * 1024):.0f}MB",
+            )
+
+        csv_content = content.decode("utf-8")
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail="File must be UTF-8 encoded")
 
@@ -840,7 +951,7 @@ async def upload_csv(file: UploadFile = File(...)):
             detail={
                 "message": "CSV parsing failed",
                 "errors": parse_result.errors,
-            }
+            },
         )
 
     # Store parsed data
@@ -885,7 +996,9 @@ async def upload_csv(file: UploadFile = File(...)):
         "parsing": {
             "total_rows": parse_result.row_count,
             "valid_rows": parse_result.valid_row_count,
-            "errors": parse_result.errors[:5] if parse_result.errors else [],  # Limit errors shown
+            "errors": parse_result.errors[:5]
+            if parse_result.errors
+            else [],  # Limit errors shown
             "warnings": parse_result.warnings[:5] if parse_result.warnings else [],
         },
         "deidentification": {
@@ -907,7 +1020,7 @@ async def download_deidentified_csv():
     if "deidentified_data" not in _demo_data_cache:
         raise HTTPException(
             status_code=404,
-            detail="No de-identified data available. Upload a CSV or run the pipeline first."
+            detail="No de-identified data available. Upload a CSV or run the pipeline first.",
         )
 
     deidentified = _demo_data_cache["deidentified_data"]
@@ -920,7 +1033,11 @@ async def download_deidentified_csv():
 
     # Determine filename
     if _demo_data_cache.get("csv_upload"):
-        original_name = _demo_data_cache.get("raw_data", {}).get("summary", {}).get("filename", "data")
+        original_name = (
+            _demo_data_cache.get("raw_data", {})
+            .get("summary", {})
+            .get("filename", "data")
+        )
         filename = f"deidentified_{original_name}"
     else:
         filename = "deidentified_patient_data.csv"
@@ -928,7 +1045,5 @@ async def download_deidentified_csv():
     return Response(
         content=csv_content,
         media_type="text/csv",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}"
-        }
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

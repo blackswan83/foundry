@@ -94,12 +94,29 @@ The backend serves the API at `/api/*`. Configure your frontend to use relative 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Server port | 8000 |
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins | Auto-detected (same-origin) |
+| `ALLOW_RAILWAY_DOMAINS` | Allow all Railway domains (dev only) | `false` |
+| `RAILWAY_PUBLIC_DOMAIN` | Railway-provided public domain | Auto-set by Railway |
 
 ### Frontend
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `VITE_API_URL` | Backend API URL | `/api` |
 | `PORT` | Server port | 3000 |
+
+### CORS Configuration
+
+**Single Service (Frontend served by Backend):**
+- No configuration needed - works automatically ✅
+
+**Two Services (Separate URLs):**
+```bash
+# In backend service
+railway variables set ALLOWED_ORIGINS=https://your-frontend-url.railway.app
+
+# In frontend service  
+railway variables set VITE_API_URL=https://your-backend-url.railway.app/api
+```
 
 ---
 
@@ -136,7 +153,7 @@ Visit: `https://your-frontend-url.railway.app`
 
 ### Build Fails
 - Check Railway logs: `railway logs`
-- Ensure Python 3.11+ and Node 18+ are available
+- Ensure Python 3.12+ and Node 22+ are available
 
 ### API Connection Issues
 - Verify `VITE_API_URL` is set correctly in frontend service

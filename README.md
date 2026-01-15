@@ -63,7 +63,7 @@ This prototype demonstrates the Nuraxi Foundry platform's capabilities for trans
 
 ## Technology Stack
 
-- **Backend**: Python 3.11+ with FastAPI
+- **Backend**: Python 3.12+ with FastAPI
 - **Frontend**: React 18 with TypeScript
 - **Data Model**: OMOP CDM v5.4
 - **Vocabularies**: SNOMED, LOINC, RxNorm
@@ -72,8 +72,8 @@ This prototype demonstrates the Nuraxi Foundry platform's capabilities for trans
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 18+
+- Python 3.12
+- Node.js 22+
 
 ### Backend Setup
 

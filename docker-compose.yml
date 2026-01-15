@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nuraxi-backend
+    working_dir: /app/backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ALLOWED_ORIGINS=http://localhost:3000
+      - RATE_LIMIT=100/minute
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    networks:
+      - nuraxi-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    container_name: nuraxi-frontend
+    working_dir: /app/frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - nuraxi-network
+
+networks:
+  nuraxi-network:
+    driver: bridge
+
+volumes:
+  backend-venv:

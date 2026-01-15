@@ -4,9 +4,10 @@ pydantic==2.5.3
 sqlalchemy==2.0.25
 python-dateutil==2.8.2
 faker==22.0.0
-pandas==2.1.4
-numpy==1.26.3
+pandas>=2.2.0
+numpy>=1.26.0
 cryptography==41.0.7
 python-multipart==0.0.6
 httpx==0.26.0
 aiofiles==23.2.1
+slowapi==0.1.9

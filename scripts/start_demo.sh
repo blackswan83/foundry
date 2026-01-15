@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Nuraxi Foundry Demo Startup Script
-# Starts both backend and frontend servers
+# Nuraxi Foundry Demo Startup Script (Local - No Docker)
+# Starts both backend and frontend servers locally
+# For Docker version, use: bash scripts/start_demo_docker.sh
 
 echo "=================================="
 echo "  Nuraxi Foundry Demo Prototype   "
@@ -21,9 +22,27 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
+# Check Python version (3.12 required)
+PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
+PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
+if [ "$PYTHON_MAJOR" -ne 3 ] || [ "$PYTHON_MINOR" -ne 12 ]; then
+    echo -e "${RED}Error: Python 3.12 required (found Python $PYTHON_VERSION)${NC}"
+    echo -e "${BLUE}Tip: Install Python 3.12 with: brew install python@3.12${NC}"
+    echo -e "${BLUE}Or use pyenv: pyenv install 3.12.7 && pyenv local 3.12.7${NC}"
+    exit 1
+fi
+
 # Check Node
 if ! command -v node &> /dev/null; then
     echo -e "${RED}Error: Node.js is not installed${NC}"
+    exit 1
+fi
+
+# Check Node version (22+)
+NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 22 ]; then
+    echo -e "${RED}Error: Node.js 22+ required (found Node.js v$(node --version | cut -d'v' -f2))${NC}"
     exit 1
 fi
 
