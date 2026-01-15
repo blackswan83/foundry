@@ -273,6 +273,114 @@ function App() {
 
     return (
       <div className="pipeline-section">
+        {/* Welcome/Explanation Section - shown before pipeline runs */}
+        {!pipelineResult && !uploadResult && (
+          <div className="welcome-section" style={{ marginBottom: '2rem' }}>
+            <div className="welcome-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                Nuraxi Foundry
+              </h1>
+              <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '700px', margin: '0 auto' }}>
+                Transform fragmented clinical data into unified, de-identified, research-ready datasets
+              </p>
+            </div>
+
+            {/* What is Foundry */}
+            <div className="result-card" style={{ marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-tertiary) 100%)' }}>
+              <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>What is Nuraxi Foundry?</h3>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '1rem' }}>
+                Nuraxi Foundry is an enterprise healthcare data platform designed for <strong>King Faisal Specialist Hospital & Research Centre (KFSHRC)</strong>.
+                It addresses the challenge of fragmented patient data across multiple hospital systems (HIS, LAB, EMR, Pharmacy, Radiology, ICU)
+                by creating a unified, longitudinal view while ensuring <strong>full regulatory compliance</strong> with Saudi PDPL and international standards.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <span className="badge" style={{ background: 'var(--primary)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem' }}>PDPL Compliant</span>
+                <span className="badge" style={{ background: 'var(--success)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem' }}>Safe Harbor</span>
+                <span className="badge" style={{ background: 'var(--info)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem' }}>OMOP CDM v5.4</span>
+                <span className="badge" style={{ background: 'var(--warning)', color: 'black', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem' }}>HiPS De-identification</span>
+              </div>
+            </div>
+
+            {/* Pipeline Steps */}
+            <div className="result-card" style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>The 5-Step Transformation Pipeline</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div className="step-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>1. Data Ingestion</div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Collect fragmented patient records from 6+ hospital source systems
+                  </p>
+                </div>
+                <div className="step-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>2. Patient Linkage</div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Cryptographic tokenization links records across systems anonymously
+                  </p>
+                </div>
+                <div className="step-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>3. De-identification</div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Remove all 18 HIPAA identifiers using Safe Harbor + HiPS methodology
+                  </p>
+                </div>
+                <div className="step-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>4. OMOP Transform</div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Convert to OMOP CDM with SNOMED, LOINC, and RxNorm vocabularies
+                  </p>
+                </div>
+                <div className="step-card" style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontWeight: 'bold', color: 'var(--primary)', marginBottom: '0.25rem' }}>5. Analytics Ready</div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Enable cohort queries, population analytics, and AI clinical insights
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Capabilities */}
+            <div className="result-card" style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Key Capabilities</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Cross-System Patient Linkage</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Build complete longitudinal patient records from fragmented data across HIS, LAB, EMR, Pharmacy, Radiology, and ICU systems using irreversible cryptographic tokens.
+                  </p>
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Regulatory Compliance</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Full compliance with Saudi PDPL, HIPAA Safe Harbor, and international privacy standards. Audit trails and consent management built-in.
+                  </p>
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Research-Ready Data</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    OMOP CDM v5.4 standardization enables participation in global research networks like OHDSI, with pre-defined cohort queries and analytics.
+                  </p>
+                </div>
+                <div>
+                  <h4 style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '0.5rem' }}>AI Clinical Intelligence</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Automated detection of drug interactions, critical lab values, care quality gaps, and risk stratification across patient populations.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div style={{ textAlign: 'center', padding: '1.5rem', background: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+              <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                Ready to see Nuraxi Foundry in action? Choose a mode below and run the pipeline.
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <strong>Demo Mode:</strong> Uses synthetic Saudi patient data | <strong>Upload CSV:</strong> Process your own data files
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Mode Toggle */}
         <div className="mode-toggle">
           <button
