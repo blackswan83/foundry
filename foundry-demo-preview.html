@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foundry Demo - 7 Section Design Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8B7355;
+      --secondary: #6B5B4F;
+      --accent: #C4A77D;
+      --background: #E8E4DC;
+      --text: #3D3D3D;
+      --text-light: #6B6B6B;
+      --white: #FFFFFF;
+      --success: #4A7C59;
+      --blue: #4A7C9B;
+      --purple: #9B4A7C;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    section {
+      min-height: 100vh;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .section-tag {
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--text-light);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    
+    .headline {
+      font-size: 48px;
+      font-weight: 300;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 40px;
+      max-width: 900px;
+      line-height: 1.2;
+    }
+    
+    .headline strong {
+      font-weight: 600;
+    }
+    
+    /* Section 1 */
+    .section-1 {
+      background: linear-gradient(135deg, #E8E4DC 0%, #D4CFC4 100%);
+    }
+    
+    .silos-container {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 50px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .silo-card {
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 2px dashed rgba(139, 115, 85, 0.3);
+    }
+    
+    .silo-card:nth-child(1) { transform: rotate(-7deg); }
+    .silo-card:nth-child(2) { transform: rotate(-3deg); }
+    .silo-card:nth-child(3) { transform: rotate(3deg); }
+    .silo-card:nth-child(4) { transform: rotate(7deg); }
+    
+    .silo-card svg {
+      margin-bottom: 12px;
+    }
+    
+    .silo-card span {
+      font-size: 13px;
+      color: var(--text);
+      text-align: center;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 60px;
+      margin-top: 20px;
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 42px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-light);
+      max-width: 150px;
+    }
+    
+    /* Section 2 */
+    .section-2 {
+      background: var(--white);
+    }
+    
+    .logo-text {
+      font-size: 28px;
+      color: var(--primary);
+      margin-bottom: 10px;
+      font-weight: 300;
+      letter-spacing: 4px;
+    }
+    
+    .subheadline {
+      font-size: 22px;
+      color: var(--text-light);
+      text-align: center;
+      max-width: 700px;
+      margin-bottom: 50px;
+      line-height: 1.6;
+    }
+    
+    .transform-visual {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    
+    .data-box {
+      width: 200px;
+      height: 120px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .data-box.before {
+      background: #F5F0EB;
+      border: 2px dashed rgba(139, 115, 85, 0.3);
+    }
+    
+    .data-box.after {
+      background: linear-gradient(135deg, #F0F7F4 0%, #E8F4F0 100%);
+      border: 2px solid rgba(74, 124, 89, 0.3);
+    }
+    
+    .data-box .label {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+    
+    .data-box.after .label {
+      color: var(--success);
+    }
+    
+    .data-squares {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .data-square {
+      width: 30px;
+      height: 35px;
+      background: rgba(139, 115, 85, 0.2);
+      border-radius: 4px;
+    }
+    
+    .data-box.before .data-square:nth-child(1) { transform: rotate(-16deg); }
+    .data-box.before .data-square:nth-child(2) { transform: rotate(-8deg); }
+    .data-box.before .data-square:nth-child(3) { transform: rotate(8deg); }
+    .data-box.before .data-square:nth-child(4) { transform: rotate(16deg); }
+    
+    .data-box.after .data-square {
+      background: var(--success);
+      opacity: 0.6;
+    }
+    
+    .arrow-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .foundry-pill {
+      background: var(--primary);
+      color: var(--white);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .omop-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      background: #F5F5F5;
+      border-radius: 8px;
+    }
+    
+    .omop-badge span:first-child {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+    
+    .omop-badge span:nth-child(2) {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .omop-badge span:last-child {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    
+    /* Section 3 */
+    .section-3 {
+      background: linear-gradient(135deg, #E8E4DC 0%, #D4CFC4 100%);
+    }
+    
+    .process-flow {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      max-width: 1200px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .process-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 180px;
+    }
+    
+    .step-circle {
+      width: 80px;
+      height: 80px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      margin-bottom: 16px;
+      font-size: 32px;
+    }
+    
+    .step-circle.success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .step-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    
+    .step-title.success {
+      color: var(--success);
+    }
+    
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-light);
+      text-align: center;
+      line-height: 1.5;
+    }
+    
+    .process-arrow {
+      padding-top: 35px;
+      color: var(--primary);
+      font-size: 24px;
+    }
+    
+    .sovereignty-note {
+      margin-top: 50px;
+      padding: 20px 40px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .sovereignty-note span:first-child {
+      font-size: 20px;
+    }
+    
+    .sovereignty-note span:last-child {
+      font-size: 15px;
+      color: var(--text);
+    }
+    
+    /* Section 4 */
+    .section-4 {
+      background: var(--white);
+    }
+    
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      max-width: 900px;
+    }
+    
+    .pillar-card {
+      padding: 40px;
+      border-radius: 16px;
+      border-left: 4px solid;
+    }
+    
+    .pillar-card.deidentified {
+      background: linear-gradient(135deg, #FDF8F3 0%, #F5EDE4 100%);
+      border-color: var(--primary);
+    }
+    
+    .pillar-card.tokenized {
+      background: linear-gradient(135deg, #F3F8FD 0%, #E4EDF5 100%);
+      border-color: var(--blue);
+    }
+    
+    .pillar-card.medical {
+      background: linear-gradient(135deg, #F3FDF8 0%, #E4F5ED 100%);
+      border-color: var(--success);
+    }
+    
+    .pillar-card.sovereign {
+      background: linear-gradient(135deg, #FDF3F8 0%, #F5E4ED 100%);
+      border-color: var(--purple);
+    }
+    
+    .pillar-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .pillar-card.deidentified .pillar-icon { background: var(--primary); }
+    .pillar-card.tokenized .pillar-icon { background: var(--blue); }
+    .pillar-card.medical .pillar-icon { background: var(--success); }
+    .pillar-card.sovereign .pillar-icon { background: var(--purple); }
+    
+    .pillar-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .pillar-card.deidentified .pillar-title { color: var(--primary); }
+    .pillar-card.tokenized .pillar-title { color: var(--blue); }
+    .pillar-card.medical .pillar-title { color: var(--success); }
+    .pillar-card.sovereign .pillar-title { color: var(--purple); }
+    
+    .pillar-desc {
+      font-size: 15px;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+    
+    /* Section 5 */
+    .section-5 {
+      background: linear-gradient(135deg, #E8E4DC 0%, #D4CFC4 100%);
+    }
+    
+    .outcomes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      max-width: 1100px;
+    }
+    
+    .outcome-card {
+      padding: 30px;
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    
+    .outcome-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #E8E4DC 0%, #D4CFC4 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+    }
+    
+    .outcome-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    
+    .outcome-desc {
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+    
+    .credentials-bar {
+      margin-top: 50px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+    
+    .credential-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .credential-item span:first-child {
+      font-size: 18px;
+      color: var(--success);
+    }
+    
+    .credential-item span:last-child {
+      font-size: 14px;
+      color: var(--text);
+    }
+    
+    /* Section 6 */
+    .section-6 {
+      background: linear-gradient(135deg, #2D2D2D 0%, #1A1A1A 100%);
+    }
+    
+    .section-6 .section-tag {
+      color: rgba(255,255,255,0.5);
+    }
+    
+    .section-6 .headline {
+      color: var(--white);
+    }
+    
+    .section-6 .headline strong {
+      color: var(--accent);
+    }
+    
+    .section-6 .subheadline {
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .ai-cards {
+      display: flex;
+      gap: 40px;
+      max-width: 900px;
+    }
+    
+    .ai-card {
+      flex: 1;
+      padding: 40px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .ai-card-bar {
+      width: 50px;
+      height: 4px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+    
+    .ai-card.vitruvia .ai-card-bar { background: var(--accent); }
+    .ai-card.agents .ai-card-bar { background: var(--success); }
+    
+    .ai-card-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    
+    .ai-card-desc {
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    
+    .ai-card-note {
+      padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .agent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .agent-check {
+      width: 24px;
+      height: 24px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--white);
+    }
+    
+    .agent-text {
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+    
+    /* Section 7 */
+    .section-7 {
+      background: var(--white);
+    }
+    
+    .use-cases-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 1000px;
+      margin-bottom: 50px;
+    }
+    
+    .use-case-card {
+      padding: 24px;
+      background: linear-gradient(135deg, #E8E4DC 0%, #D4CFC4 100%);
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .use-case-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+    
+    .use-case-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    
+    .use-case-item {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+    
+    .cta-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .cta-button {
+      padding: 18px 48px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--primary);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(139, 115, 85, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(139, 115, 85, 0.4);
+    }
+    
+    .cta-tagline {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+    
+    /* Navigation */
+    .nav-dots {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 100;
+    }
+    
+    .nav-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(139, 115, 85, 0.3);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .nav-dot:hover, .nav-dot.active {
+      background: var(--primary);
+    }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+      .pillars-grid, .outcomes-grid, .use-cases-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .ai-cards {
+        flex-direction: column;
+      }
+      
+      .transform-visual {
+        flex-direction: column;
+      }
+      
+      .process-flow {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .process-arrow {
+        transform: rotate(90deg);
+        padding: 20px 0;
+      }
+      
+      .headline {
+        font-size: 32px;
+      }
+      
+      .stats-row {
+        flex-direction: column;
+        gap: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Dots -->
+  <div class="nav-dots">
+    <a href="#section-1" class="nav-dot active" title="The Problem"></a>
+    <a href="#section-2" class="nav-dot" title="What is Foundry"></a>
+    <a href="#section-3" class="nav-dot" title="How it Works"></a>
+    <a href="#section-4" class="nav-dot" title="Core Pillars"></a>
+    <a href="#section-5" class="nav-dot" title="Outcomes"></a>
+    <a href="#section-6" class="nav-dot" title="Clinical Intelligence"></a>
+    <a href="#section-7" class="nav-dot" title="Research Enclave"></a>
+  </div>
+
+  <!-- SECTION 1: THE PROBLEM -->
+  <section class="section-1" id="section-1">
+    <div class="section-tag">The Challenge</div>
+    <h1 class="headline">
+      Your clinical data is <strong>fragmented</strong>, <strong>siloed</strong>, and <strong>locked away</strong>
+    </h1>
+    
+    <div class="silos-container">
+      <div class="silo-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B7355" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
+          <path d="M21 9v4c0 1.66-4 3-9 3s-9-1.34-9-3V9"/>
+          <path d="M21 13v4c0 1.66-4 3-9 3s-9-1.34-9-3v-4"/>
+        </svg>
+        <span>EHR System</span>
+      </div>
+      <div class="silo-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B7355" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
+          <path d="M21 9v4c0 1.66-4 3-9 3s-9-1.34-9-3V9"/>
+          <path d="M21 13v4c0 1.66-4 3-9 3s-9-1.34-9-3v-4"/>
+        </svg>
+        <span>Lab Results</span>
+      </div>
+      <div class="silo-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B7355" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
+          <path d="M21 9v4c0 1.66-4 3-9 3s-9-1.34-9-3V9"/>
+          <path d="M21 13v4c0 1.66-4 3-9 3s-9-1.34-9-3v-4"/>
+        </svg>
+        <span>Clinical Notes</span>
+      </div>
+      <div class="silo-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B7355" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 5v4c0 1.66-4 3-9 3s-9-1.34-9-3V5"/>
+          <path d="M21 9v4c0 1.66-4 3-9 3s-9-1.34-9-3V9"/>
+          <path d="M21 13v4c0 1.66-4 3-9 3s-9-1.34-9-3v-4"/>
+        </svg>
+        <span>Imaging Reports</span>
+      </div>
+    </div>
+    
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-number">80%</div>
+        <div class="stat-label">of clinical data is unstructured</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">0%</div>
+        <div class="stat-label">AI-ready without transformation</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">value locked inside</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: WHAT IS THE FOUNDRY -->
+  <section class="section-2" id="section-2">
+    <div class="section-tag">The Solution</div>
+    <div class="logo-text">☥ NURAXI</div>
+    <h1 class="headline" style="margin-bottom: 20px;">The <strong>Foundry</strong></h1>
+    
+    <p class="subheadline">
+      A sovereign data transformation engine that converts fragmented clinical data into an AI-ready, research-grade intelligence platform
+    </p>
+    
+    <div class="transform-visual">
+      <div class="data-box before">
+        <div class="label">Raw Clinical Data</div>
+        <div class="data-squares">
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+        </div>
+      </div>
+      
+      <div class="arrow-section">
+        <div class="foundry-pill">The Foundry</div>
+        <svg width="100" height="20" viewBox="0 0 100 20">
+          <path d="M0 10 H80 L70 5 M80 10 L70 15" stroke="#8B7355" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      
+      <div class="data-box after">
+        <div class="label">OMOP Structured Data</div>
+        <div class="data-squares">
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+          <div class="data-square"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="omop-badge">
+      <span>Powered by</span>
+      <span>OMOP Common Data Model</span>
+      <span>• Global Standard</span>
+    </div>
+  </section>
+
+  <!-- SECTION 3: HOW IT WORKS -->
+  <section class="section-3" id="section-3">
+    <div class="section-tag">The Process</div>
+    <h2 class="headline" style="font-size: 40px;">How <strong>The Foundry</strong> Works</h2>
+    
+    <div class="process-flow">
+      <div class="process-step">
+        <div class="step-circle">📥</div>
+        <div class="step-title">1. Ingest</div>
+        <div class="step-desc">Connect to EHRs, Labs, Clinical Notes, FHIR feeds</div>
+      </div>
+      
+      <div class="process-arrow">→</div>
+      
+      <div class="process-step">
+        <div class="step-circle">🔒</div>
+        <div class="step-title">2. De-identify</div>
+        <div class="step-desc">Safe Harbor compliant removal of all PII</div>
+      </div>
+      
+      <div class="process-arrow">→</div>
+      
+      <div class="process-step">
+        <div class="step-circle">🔗</div>
+        <div class="step-title">3. Tokenize</div>
+        <div class="step-desc">Anonymous linkage across multiple data sources</div>
+      </div>
+      
+      <div class="process-arrow">→</div>
+      
+      <div class="process-step">
+        <div class="step-circle">🏷️</div>
+        <div class="step-title">4. Encode</div>
+        <div class="step-desc">Medical coding: ICD-10, SNOMED-CT, LOINC, RxNorm</div>
+      </div>
+      
+      <div class="process-arrow">→</div>
+      
+      <div class="process-step">
+        <div class="step-circle success">✓</div>
+        <div class="step-title success">5. OMOP Output</div>
+        <div class="step-desc">Structured, queryable, AI-ready data</div>
+      </div>
+    </div>
+    
+    <div class="sovereignty-note">
+      <span>🛡️</span>
+      <span>All processing happens <strong>locally</strong> within your sovereign infrastructure</span>
+    </div>
+  </section>
+
+  <!-- SECTION 4: FOUR PILLARS -->
+  <section class="section-4" id="section-4">
+    <div class="section-tag">Core Principles</div>
+    <h2 class="headline" style="font-size: 40px;">Four Pillars of <strong>Trust</strong></h2>
+    
+    <div class="pillars-grid">
+      <div class="pillar-card deidentified">
+        <div class="pillar-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20v-2a6 6 0 0112 0v2"/>
+            <line x1="4" y1="6" x2="20" y2="20"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">De-identified</h3>
+        <p class="pillar-desc">Safe Harbor compliant de-identification removes all 18 HIPAA identifiers. No patient information ever leaves your control.</p>
+      </div>
+      
+      <div class="pillar-card tokenized">
+        <div class="pillar-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+            <line x1="10" y1="6.5" x2="14" y2="6.5"/>
+            <line x1="6.5" y1="10" x2="6.5" y2="14"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Tokenized</h3>
+        <p class="pillar-desc">Anonymous patient tokens enable longitudinal tracking across multiple data sources without exposing identity.</p>
+      </div>
+      
+      <div class="pillar-card medical">
+        <div class="pillar-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1"/>
+            <path d="M9 12h6"/>
+            <path d="M9 16h6"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Medical Coding</h3>
+        <p class="pillar-desc">Standardized terminology using ICD-10, SNOMED-CT, LOINC, and RxNorm makes data computable and interoperable.</p>
+      </div>
+      
+      <div class="pillar-card sovereign">
+        <div class="pillar-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <h3 class="pillar-title">Sovereign</h3>
+        <p class="pillar-desc">Data never leaves your infrastructure. Full control, full compliance, full sovereignty. Even Nuraxi cannot access it without permission.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: OUTCOMES -->
+  <section class="section-5" id="section-5">
+    <div class="section-tag">Capabilities</div>
+    <h2 class="headline" style="font-size: 40px;">What You Can <strong>Achieve</strong></h2>
+    
+    <div class="outcomes-grid">
+      <div class="outcome-card">
+        <div class="outcome-icon">📊</div>
+        <h3 class="outcome-title">Analytics</h3>
+        <p class="outcome-desc">Longitudinal analysis across conditions, departments, outcomes, and patient journeys</p>
+      </div>
+      
+      <div class="outcome-card">
+        <div class="outcome-icon">🔬</div>
+        <h3 class="outcome-title">Research</h3>
+        <p class="outcome-desc">Deep clinical research from connected, structured datasets</p>
+      </div>
+      
+      <div class="outcome-card">
+        <div class="outcome-icon">🤖</div>
+        <h3 class="outcome-title">AI Training</h3>
+        <p class="outcome-desc">Train AI agents and models on your de-identified clinical data</p>
+      </div>
+      
+      <div class="outcome-card">
+        <div class="outcome-icon">🤝</div>
+        <h3 class="outcome-title">Data Sharing</h3>
+        <p class="outcome-desc">Controlled third-party access to de-identified OMOP data</p>
+      </div>
+    </div>
+    
+    <div class="credentials-bar">
+      <div class="credential-item">
+        <span>✓</span>
+        <span>HIPAA Compliant</span>
+      </div>
+      <div class="credential-item">
+        <span>✓</span>
+        <span>Deployed in USA HIEs</span>
+      </div>
+      <div class="credential-item">
+        <span>✓</span>
+        <span>OMOP Standard</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: CLINICAL INTELLIGENCE -->
+  <section class="section-6" id="section-6">
+    <div class="section-tag">AI Powered</div>
+    <h2 class="headline" style="font-size: 40px;">Clinical <strong>Intelligence</strong></h2>
+    <p class="subheadline">The Foundry unlocks AI and agentic power for immediate clinical and commercial impact</p>
+    
+    <div class="ai-cards">
+      <div class="ai-card vitruvia">
+        <div class="ai-card-bar"></div>
+        <h3 class="ai-card-title">Vitruvia</h3>
+        <p class="ai-card-desc">Nuraxi's state-of-the-art transformer-based clinical intelligence engine — a 'Clinical LLM' trained on real-world patient data.</p>
+        <div class="ai-card-note">Train your own clinical LLM or leverage Nuraxi's journey towards building Vitruvia</div>
+      </div>
+      
+      <div class="ai-card agents">
+        <div class="ai-card-bar"></div>
+        <h3 class="ai-card-title">Clinical AI Agents</h3>
+        <div class="agent-list">
+          <div class="agent-item">
+            <div class="agent-check">✓</div>
+            <span class="agent-text">Review every patient encounter</span>
+          </div>
+          <div class="agent-item">
+            <div class="agent-check">✓</div>
+            <span class="agent-text">Identify follow-up opportunities</span>
+          </div>
+          <div class="agent-item">
+            <div class="agent-check">✓</div>
+            <span class="agent-text">Recommend tests & consultations</span>
+          </div>
+          <div class="agent-item">
+            <div class="agent-check">✓</div>
+            <span class="agent-text">Conduct research on difficult cases</span>
+          </div>
+          <div class="agent-item">
+            <div class="agent-check">✓</div>
+            <span class="agent-text">Monitor clinical quality</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 7: RESEARCH ENCLAVE -->
+  <section class="section-7" id="section-7">
+    <div class="section-tag">Join Us</div>
+    <h2 class="headline" style="font-size: 44px;">Nuraxi <strong>Research Enclave</strong></h2>
+    <p class="subheadline" style="margin-bottom: 50px;">Join a global network of healthcare organizations collaborating on frontier AI research that advances clinical intelligence — and shares commercial benefits</p>
+    
+    <div class="use-cases-grid">
+      <div class="use-case-card">
+        <div class="use-case-icon">💊</div>
+        <h4 class="use-case-title">Pharma</h4>
+        <div class="use-case-item">Real world evidence</div>
+        <div class="use-case-item">Patient stratification</div>
+        <div class="use-case-item">Clinical trial design</div>
+      </div>
+      
+      <div class="use-case-card">
+        <div class="use-case-icon">🏛️</div>
+        <h4 class="use-case-title">Government</h4>
+        <div class="use-case-item">Population health</div>
+        <div class="use-case-item">Risk stratification</div>
+        <div class="use-case-item">Prevention modeling</div>
+      </div>
+      
+      <div class="use-case-card">
+        <div class="use-case-icon">🧪</div>
+        <h4 class="use-case-title">AI Researchers</h4>
+        <div class="use-case-item">Train clinical agents</div>
+        <div class="use-case-item">Privacy-preserving ML</div>
+        <div class="use-case-item">Model evaluation</div>
+      </div>
+      
+      <div class="use-case-card">
+        <div class="use-case-icon">🎓</div>
+        <h4 class="use-case-title">Academia</h4>
+        <div class="use-case-item">Cohort discovery</div>
+        <div class="use-case-item">Predictive models</div>
+        <div class="use-case-item">Outcome research</div>
+      </div>
+    </div>
+    
+    <div class="cta-section">
+      <button class="cta-button">Become a Partner</button>
+      <span class="cta-tagline">Transform your data. Unlock AI. Shape the future of healthcare.</span>
+    </div>
+  </section>
+
+  <script>
+    // Simple scroll-based navigation dot highlighting
+    const sections = document.querySelectorAll('section');
+    const navDots = document.querySelectorAll('.nav-dot');
+    
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (scrollY >= sectionTop - 300) {
+          current = section.getAttribute('id');
+        }
+      });
+      
+      navDots.forEach(dot => {
+        dot.classList.remove('active');
+        if (dot.getAttribute('href') === '#' + current) {
+          dot.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
