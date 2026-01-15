@@ -287,7 +287,7 @@ const Section3_HowItWorks = () => (
     }}>
       {[
         { icon: '📥', title: '1. Ingest', desc: 'Connect to EHRs, Labs, Clinical Notes, FHIR feeds' },
-        { icon: '🔒', title: '2. De-identify', desc: 'Safe Harbor compliant removal of all PII' },
+        { icon: '🔒', title: '2. De-identify', desc: 'PDPL-compliant removal of all personal identifiers' },
         { icon: '🔗', title: '3. Tokenize', desc: 'Anonymous linkage across multiple data sources' },
         { icon: '🏷️', title: '4. Encode', desc: 'Medical coding: ICD-10, SNOMED-CT, LOINC, RxNorm' },
         { icon: '✓', title: '5. OMOP Output', desc: 'Structured, queryable, AI-ready data', isLast: true },
@@ -379,7 +379,7 @@ const Section4_CorePillars = () => (
         {
           icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20v-2a6 6 0 0112 0v2"/><line x1="4" y1="6" x2="20" y2="20"/></svg>,
           title: 'De-identified',
-          desc: 'Safe Harbor compliant de-identification removes all 18 HIPAA identifiers. No patient information ever leaves your control.',
+          desc: 'PDPL-compliant de-identification removes all personal identifiers. Patient data never leaves your sovereign infrastructure.',
           color: colors.primary,
           bg: 'linear-gradient(135deg, #FDF8F3 0%, #F5EDE4 100%)',
         },
@@ -514,7 +514,7 @@ const Section5_Outcomes = () => (
       flexWrap: 'wrap',
       justifyContent: 'center',
     }}>
-      {['PDPL Compliant', 'HIPAA Safe Harbor', 'OMOP Standard'].map((item, i) => (
+      {['PDPL Compliant', 'NCA Standards', 'OMOP CDM v5.4'].map((item, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '16px', color: colors.success }}>✓</span>
           <span style={{ fontSize: '14px', color: colors.text }}>{item}</span>
