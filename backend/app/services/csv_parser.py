@@ -229,6 +229,8 @@ class CSVParserService:
                 )
 
             # Process each row
+            seen_patients: Dict[str, Patient] = {}  # Track unique patients by ID
+
             for row_idx, row in enumerate(reader, start=2):  # Start at 2 (1-indexed + header)
                 row_count += 1
 
@@ -247,10 +249,14 @@ class CSVParserService:
                         continue
 
                     if patient:
-                        patients.append(patient)
+                        # Deduplicate patients by source_patient_id
+                        patient_key = patient.source_patient_id
+                        if patient_key not in seen_patients:
+                            seen_patients[patient_key] = patient
+                            patients.append(patient)
 
-                        # Parse encounter data if present
-                        encounter, enc_errors = self._parse_encounter_row(normalized_row, patient, row_idx)
+                        # Parse encounter data if present (always add encounters)
+                        encounter, enc_errors = self._parse_encounter_row(normalized_row, seen_patients[patient_key], row_idx)
                         if enc_errors:
                             warnings.extend(enc_errors)  # Encounter errors are warnings
                         if encounter:
