@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis, PatientInfo } from './services/api';
 import FoundryLanding from './components/FoundryLanding';
+import MedicalRecordProcessor from './components/MedicalRecordProcessor';
 
-type TabType = 'home' | 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality';
+type TabType = 'home' | 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality' | 'medical-record';
 type PipelineMode = 'demo' | 'upload';
 
 const PIPELINE_STEPS = [
@@ -1231,6 +1232,9 @@ function App() {
             <button className={`tab demo-tab ${activeTab === 'quality' ? 'active' : ''}`} onClick={() => setActiveTab('quality')}>
               Data Quality
             </button>
+            <button className={`tab demo-tab ${activeTab === 'medical-record' ? 'active' : ''}`} onClick={() => setActiveTab('medical-record')}>
+              Medical Records
+            </button>
           </>
         )}
       </div>
@@ -1244,6 +1248,7 @@ function App() {
       {activeTab === 'ai' && renderAITab()}
       {activeTab === 'executive' && renderExecutiveTab()}
       {activeTab === 'quality' && renderQualityTab()}
+      {activeTab === 'medical-record' && <MedicalRecordProcessor />}
     </div>
   );
 }

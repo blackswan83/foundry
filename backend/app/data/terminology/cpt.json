@@ -1,0 +1,206 @@
+{
+  "version": "2024",
+  "description": "CPT curated subset for clinical demo - common procedures",
+  "codes": {
+    "93000": {
+      "short_description": "Electrocardiogram, routine",
+      "long_description": "Electrocardiogram, routine ECG with at least 12 leads; with interpretation and report",
+      "category": "Cardiovascular",
+      "subcategory": "Diagnostic testing",
+      "typical_time_minutes": 10,
+      "requires_physician": true
+    },
+    "93010": {
+      "short_description": "Electrocardiogram, interpretation",
+      "long_description": "Electrocardiogram, routine ECG with at least 12 leads; interpretation and report only",
+      "category": "Cardiovascular",
+      "subcategory": "Diagnostic testing",
+      "typical_time_minutes": 5,
+      "requires_physician": true
+    },
+    "93306": {
+      "short_description": "Echocardiography, TTE with Doppler",
+      "long_description": "Echocardiography, transthoracic, real-time with image documentation (2D), includes M-mode recording, with spectral Doppler, complete",
+      "category": "Cardiovascular",
+      "subcategory": "Diagnostic testing",
+      "typical_time_minutes": 45,
+      "requires_physician": true
+    },
+    "93458": {
+      "short_description": "Left heart catheterization",
+      "long_description": "Catheter placement in coronary artery(s) for coronary angiography, including intraprocedural injection(s) for coronary angiography, imaging supervision and interpretation; with left heart catheterization",
+      "category": "Cardiovascular",
+      "subcategory": "Interventional",
+      "typical_time_minutes": 60,
+      "requires_physician": true
+    },
+    "93510": {
+      "short_description": "Left heart catheterization, retrograde",
+      "long_description": "Left heart catheterization, retrograde, from the brachial artery, axillary artery or femoral artery; percutaneous",
+      "category": "Cardiovascular",
+      "subcategory": "Interventional",
+      "typical_time_minutes": 60,
+      "requires_physician": true
+    },
+    "92928": {
+      "short_description": "PCI with stent, single vessel",
+      "long_description": "Percutaneous transcatheter placement of intracoronary stent(s), with coronary angioplasty when performed; single major coronary artery or branch",
+      "category": "Cardiovascular",
+      "subcategory": "Interventional",
+      "typical_time_minutes": 90,
+      "requires_physician": true
+    },
+    "71046": {
+      "short_description": "Chest X-ray, 2 views",
+      "long_description": "Radiologic examination, chest; 2 views, frontal and lateral",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 15,
+      "requires_physician": true
+    },
+    "71250": {
+      "short_description": "CT chest without contrast",
+      "long_description": "Computed tomography, thorax; without contrast material",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 30,
+      "requires_physician": true
+    },
+    "71260": {
+      "short_description": "CT chest with contrast",
+      "long_description": "Computed tomography, thorax; with contrast material(s)",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 30,
+      "requires_physician": true
+    },
+    "71275": {
+      "short_description": "CT angiography, chest",
+      "long_description": "Computed tomographic angiography, chest (noncoronary), with contrast material(s), including noncontrast images, if performed, and image postprocessing",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 45,
+      "requires_physician": true
+    },
+    "74176": {
+      "short_description": "CT abdomen and pelvis without contrast",
+      "long_description": "Computed tomography, abdomen and pelvis; without contrast material",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 30,
+      "requires_physician": true
+    },
+    "70553": {
+      "short_description": "MRI brain with and without contrast",
+      "long_description": "Magnetic resonance imaging, brain (including brain stem); without contrast material, followed by contrast material(s) and further sequences",
+      "category": "Radiology",
+      "subcategory": "Diagnostic imaging",
+      "typical_time_minutes": 60,
+      "requires_physician": true
+    },
+    "36556": {
+      "short_description": "Central venous catheter insertion",
+      "long_description": "Insertion of non-tunneled centrally inserted central venous catheter; age 5 years or older",
+      "category": "Vascular",
+      "subcategory": "Catheter placement",
+      "typical_time_minutes": 30,
+      "requires_physician": true
+    },
+    "36620": {
+      "short_description": "Arterial line placement",
+      "long_description": "Arterial catheterization or cannulation for sampling, monitoring or transfusion; percutaneous",
+      "category": "Vascular",
+      "subcategory": "Catheter placement",
+      "typical_time_minutes": 15,
+      "requires_physician": true
+    },
+    "31500": {
+      "short_description": "Intubation, endotracheal",
+      "long_description": "Intubation, endotracheal, emergency procedure",
+      "category": "Respiratory",
+      "subcategory": "Airway management",
+      "typical_time_minutes": 10,
+      "requires_physician": true
+    },
+    "94003": {
+      "short_description": "Ventilator management, first day",
+      "long_description": "Ventilator management; first day",
+      "category": "Respiratory",
+      "subcategory": "Critical care",
+      "typical_time_minutes": 60,
+      "requires_physician": true
+    },
+    "99291": {
+      "short_description": "Critical care, first 30-74 minutes",
+      "long_description": "Critical care, evaluation and management of the critically ill or critically injured patient; first 30-74 minutes",
+      "category": "Evaluation and Management",
+      "subcategory": "Critical care",
+      "typical_time_minutes": 45,
+      "requires_physician": true
+    },
+    "99223": {
+      "short_description": "Initial hospital care, high severity",
+      "long_description": "Initial hospital care, per day, for the evaluation and management of a patient, which requires a medically appropriate history and/or examination and high level of medical decision making",
+      "category": "Evaluation and Management",
+      "subcategory": "Hospital care",
+      "typical_time_minutes": 75,
+      "requires_physician": true
+    },
+    "99232": {
+      "short_description": "Subsequent hospital care, moderate",
+      "long_description": "Subsequent hospital care, per day, for the evaluation and management of a patient, which requires a medically appropriate history and/or examination and moderate level of medical decision making",
+      "category": "Evaluation and Management",
+      "subcategory": "Hospital care",
+      "typical_time_minutes": 35,
+      "requires_physician": true
+    },
+    "99238": {
+      "short_description": "Hospital discharge day, 30 min or less",
+      "long_description": "Hospital discharge day management; 30 minutes or less",
+      "category": "Evaluation and Management",
+      "subcategory": "Hospital care",
+      "typical_time_minutes": 30,
+      "requires_physician": true
+    },
+    "85025": {
+      "short_description": "Complete blood count (CBC)",
+      "long_description": "Blood count; complete (CBC), automated (Hgb, Hct, RBC, WBC and platelet count) and automated differential WBC count",
+      "category": "Pathology and Laboratory",
+      "subcategory": "Hematology",
+      "typical_time_minutes": 5,
+      "requires_physician": false
+    },
+    "80053": {
+      "short_description": "Comprehensive metabolic panel",
+      "long_description": "Comprehensive metabolic panel (Albumin, bilirubin, calcium, carbon dioxide, chloride, creatinine, glucose, phosphatase alkaline, potassium, protein total, sodium, urea nitrogen, AST, ALT)",
+      "category": "Pathology and Laboratory",
+      "subcategory": "Chemistry",
+      "typical_time_minutes": 10,
+      "requires_physician": false
+    },
+    "80048": {
+      "short_description": "Basic metabolic panel",
+      "long_description": "Basic metabolic panel (Calcium, carbon dioxide, chloride, creatinine, glucose, potassium, sodium, urea nitrogen)",
+      "category": "Pathology and Laboratory",
+      "subcategory": "Chemistry",
+      "typical_time_minutes": 10,
+      "requires_physician": false
+    },
+    "84484": {
+      "short_description": "Troponin, quantitative",
+      "long_description": "Troponin, quantitative",
+      "category": "Pathology and Laboratory",
+      "subcategory": "Chemistry",
+      "typical_time_minutes": 30,
+      "requires_physician": false
+    },
+    "83036": {
+      "short_description": "Hemoglobin A1c",
+      "long_description": "Hemoglobin; glycosylated (A1C)",
+      "category": "Pathology and Laboratory",
+      "subcategory": "Chemistry",
+      "typical_time_minutes": 10,
+      "requires_physician": false
+    }
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "version": "2024-01",
+  "description": "RxNorm curated subset for clinical demo - common medications",
+  "drugs": {
+    "860975": {
+      "name": "Metformin",
+      "brand_names": ["Glucophage", "Fortamet", "Glumetza"],
+      "generic_name": "metformin hydrochloride",
+      "drug_class": "Biguanides",
+      "route": "oral",
+      "common_doses": ["500mg", "850mg", "1000mg"],
+      "indications": ["Type 2 diabetes mellitus"],
+      "contraindications": ["Renal impairment", "Metabolic acidosis"]
+    },
+    "314076": {
+      "name": "Lisinopril",
+      "brand_names": ["Prinivil", "Zestril"],
+      "generic_name": "lisinopril",
+      "drug_class": "ACE inhibitors",
+      "route": "oral",
+      "common_doses": ["2.5mg", "5mg", "10mg", "20mg", "40mg"],
+      "indications": ["Hypertension", "Heart failure", "Post-MI"],
+      "contraindications": ["Angioedema", "Pregnancy", "Bilateral renal artery stenosis"]
+    },
+    "617311": {
+      "name": "Atorvastatin",
+      "brand_names": ["Lipitor"],
+      "generic_name": "atorvastatin calcium",
+      "drug_class": "HMG-CoA reductase inhibitors (Statins)",
+      "route": "oral",
+      "common_doses": ["10mg", "20mg", "40mg", "80mg"],
+      "indications": ["Hyperlipidemia", "Atherosclerotic cardiovascular disease prevention"],
+      "contraindications": ["Active liver disease", "Pregnancy"]
+    },
+    "1191": {
+      "name": "Aspirin",
+      "brand_names": ["Bayer", "Ecotrin", "Bufferin"],
+      "generic_name": "aspirin",
+      "drug_class": "Salicylates / Antiplatelet agents",
+      "route": "oral",
+      "common_doses": ["81mg", "325mg"],
+      "indications": ["Antiplatelet therapy", "Pain", "Fever", "ACS"],
+      "contraindications": ["Active bleeding", "Aspirin allergy", "Peptic ulcer"]
+    },
+    "329528": {
+      "name": "Amlodipine",
+      "brand_names": ["Norvasc"],
+      "generic_name": "amlodipine besylate",
+      "drug_class": "Calcium channel blockers (Dihydropyridines)",
+      "route": "oral",
+      "common_doses": ["2.5mg", "5mg", "10mg"],
+      "indications": ["Hypertension", "Angina"],
+      "contraindications": ["Severe aortic stenosis", "Cardiogenic shock"]
+    },
+    "200031": {
+      "name": "Carvedilol",
+      "brand_names": ["Coreg"],
+      "generic_name": "carvedilol",
+      "drug_class": "Beta-blockers (non-selective with alpha-blocking)",
+      "route": "oral",
+      "common_doses": ["3.125mg", "6.25mg", "12.5mg", "25mg"],
+      "indications": ["Heart failure", "Hypertension", "Post-MI"],
+      "contraindications": ["Severe bradycardia", "Heart block", "Asthma"]
+    },
+    "4603": {
+      "name": "Furosemide",
+      "brand_names": ["Lasix"],
+      "generic_name": "furosemide",
+      "drug_class": "Loop diuretics",
+      "route": "oral/IV",
+      "common_doses": ["20mg", "40mg", "80mg"],
+      "indications": ["Edema", "Heart failure", "Hypertension"],
+      "contraindications": ["Anuria", "Severe hypokalemia"]
+    },
+    "11289": {
+      "name": "Warfarin",
+      "brand_names": ["Coumadin", "Jantoven"],
+      "generic_name": "warfarin sodium",
+      "drug_class": "Vitamin K antagonists",
+      "route": "oral",
+      "common_doses": ["1mg", "2mg", "2.5mg", "3mg", "4mg", "5mg", "7.5mg", "10mg"],
+      "indications": ["Atrial fibrillation", "DVT/PE", "Mechanical heart valves"],
+      "contraindications": ["Active bleeding", "Pregnancy"]
+    },
+    "1364430": {
+      "name": "Apixaban",
+      "brand_names": ["Eliquis"],
+      "generic_name": "apixaban",
+      "drug_class": "Direct oral anticoagulants (Factor Xa inhibitors)",
+      "route": "oral",
+      "common_doses": ["2.5mg", "5mg"],
+      "indications": ["Atrial fibrillation", "DVT/PE prophylaxis and treatment"],
+      "contraindications": ["Active bleeding", "Prosthetic heart valves"]
+    },
+    "1037045": {
+      "name": "Clopidogrel",
+      "brand_names": ["Plavix"],
+      "generic_name": "clopidogrel bisulfate",
+      "drug_class": "P2Y12 inhibitors (Antiplatelet agents)",
+      "route": "oral",
+      "common_doses": ["75mg", "300mg (loading)"],
+      "indications": ["ACS", "Recent MI/stroke", "PCI"],
+      "contraindications": ["Active bleeding"]
+    },
+    "213169": {
+      "name": "Heparin",
+      "brand_names": ["Hep-Lock"],
+      "generic_name": "heparin sodium",
+      "drug_class": "Anticoagulants (Unfractionated heparins)",
+      "route": "IV/SC",
+      "common_doses": ["5000 units", "Weight-based infusion"],
+      "indications": ["ACS", "DVT/PE", "Anticoagulation during procedures"],
+      "contraindications": ["Active bleeding", "HIT history", "Severe thrombocytopenia"]
+    },
+    "7052": {
+      "name": "Morphine",
+      "brand_names": ["MS Contin", "Roxanol"],
+      "generic_name": "morphine sulfate",
+      "drug_class": "Opioid analgesics",
+      "route": "oral/IV",
+      "common_doses": ["2mg", "4mg", "10mg", "15mg"],
+      "indications": ["Severe pain", "ACS chest pain", "Dyspnea in palliative care"],
+      "contraindications": ["Respiratory depression", "Paralytic ileus"]
+    },
+    "904453": {
+      "name": "Omeprazole",
+      "brand_names": ["Prilosec"],
+      "generic_name": "omeprazole",
+      "drug_class": "Proton pump inhibitors",
+      "route": "oral",
+      "common_doses": ["20mg", "40mg"],
+      "indications": ["GERD", "Peptic ulcer", "H. pylori (with antibiotics)"],
+      "contraindications": ["PPI allergy"]
+    },
+    "7646": {
+      "name": "Nitroglycerin",
+      "brand_names": ["Nitrostat", "Nitro-Bid", "Nitro-Dur"],
+      "generic_name": "nitroglycerin",
+      "drug_class": "Nitrates",
+      "route": "sublingual/IV/topical",
+      "common_doses": ["0.4mg SL", "5-200 mcg/min IV"],
+      "indications": ["Angina", "ACS", "Heart failure"],
+      "contraindications": ["Hypotension", "Concurrent PDE5 inhibitors"]
+    },
+    "8896": {
+      "name": "Oxygen",
+      "brand_names": [],
+      "generic_name": "oxygen",
+      "drug_class": "Medical gases",
+      "route": "inhalation",
+      "common_doses": ["2-6 L/min nasal cannula", "10-15 L/min non-rebreather"],
+      "indications": ["Hypoxemia", "ACS", "Respiratory distress"],
+      "contraindications": []
+    },
+    "847230": {
+      "name": "Insulin glargine",
+      "brand_names": ["Lantus", "Basaglar", "Toujeo"],
+      "generic_name": "insulin glargine",
+      "drug_class": "Long-acting insulins",
+      "route": "subcutaneous",
+      "common_doses": ["Patient-specific dosing"],
+      "indications": ["Diabetes mellitus"],
+      "contraindications": ["Hypoglycemia"]
+    },
+    "1798509": {
+      "name": "Insulin lispro",
+      "brand_names": ["Humalog", "Admelog"],
+      "generic_name": "insulin lispro",
+      "drug_class": "Rapid-acting insulins",
+      "route": "subcutaneous",
+      "common_doses": ["Patient-specific dosing"],
+      "indications": ["Diabetes mellitus"],
+      "contraindications": ["Hypoglycemia"]
+    },
+    "26225": {
+      "name": "Ondansetron",
+      "brand_names": ["Zofran"],
+      "generic_name": "ondansetron",
+      "drug_class": "5-HT3 receptor antagonists",
+      "route": "oral/IV",
+      "common_doses": ["4mg", "8mg"],
+      "indications": ["Nausea and vomiting"],
+      "contraindications": ["QT prolongation", "Concomitant apomorphine"]
+    },
+    "42316": {
+      "name": "Tacrolimus",
+      "brand_names": ["Prograf", "Envarsus"],
+      "generic_name": "tacrolimus",
+      "drug_class": "Calcineurin inhibitors",
+      "route": "oral/IV",
+      "common_doses": ["0.5mg", "1mg", "5mg"],
+      "indications": ["Transplant rejection prophylaxis"],
+      "contraindications": ["Tacrolimus hypersensitivity"]
+    },
+    "68149": {
+      "name": "Mycophenolate mofetil",
+      "brand_names": ["CellCept"],
+      "generic_name": "mycophenolate mofetil",
+      "drug_class": "Immunosuppressants (IMPDH inhibitors)",
+      "route": "oral/IV",
+      "common_doses": ["250mg", "500mg", "1000mg"],
+      "indications": ["Transplant rejection prophylaxis"],
+      "contraindications": ["Pregnancy", "Hypersensitivity"]
+    }
+  }
+}

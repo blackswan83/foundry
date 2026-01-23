@@ -1,0 +1,174 @@
+{
+  "version": "2024",
+  "description": "ICD-10-CM curated subset for clinical demo",
+  "codes": {
+    "I21.9": {
+      "description": "Acute myocardial infarction, unspecified",
+      "long_description": "Acute myocardial infarction, unspecified site",
+      "category": "Ischemic heart diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "22298006"
+    },
+    "I21.0": {
+      "description": "ST elevation myocardial infarction of anterior wall",
+      "long_description": "ST elevation (STEMI) myocardial infarction involving left anterior descending coronary artery",
+      "category": "Ischemic heart diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "22298006"
+    },
+    "I21.4": {
+      "description": "Non-ST elevation myocardial infarction",
+      "long_description": "Non-ST elevation (NSTEMI) myocardial infarction",
+      "category": "Ischemic heart diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "22298006"
+    },
+    "I24.9": {
+      "description": "Acute ischemic heart disease, unspecified",
+      "long_description": "Acute coronary syndrome, unspecified",
+      "category": "Ischemic heart diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "394659003"
+    },
+    "E11.9": {
+      "description": "Type 2 diabetes mellitus without complications",
+      "long_description": "Type 2 diabetes mellitus without complications",
+      "category": "Diabetes mellitus",
+      "chapter": "Endocrine, nutritional and metabolic diseases",
+      "snomed_mapping": "44054006"
+    },
+    "E11.65": {
+      "description": "Type 2 diabetes with hyperglycemia",
+      "long_description": "Type 2 diabetes mellitus with hyperglycemia",
+      "category": "Diabetes mellitus",
+      "chapter": "Endocrine, nutritional and metabolic diseases",
+      "snomed_mapping": "44054006"
+    },
+    "I10": {
+      "description": "Essential hypertension",
+      "long_description": "Essential (primary) hypertension",
+      "category": "Hypertensive diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "38341003"
+    },
+    "I50.9": {
+      "description": "Heart failure, unspecified",
+      "long_description": "Heart failure, unspecified",
+      "category": "Heart failure",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "84114007"
+    },
+    "I48.91": {
+      "description": "Atrial fibrillation, unspecified",
+      "long_description": "Unspecified atrial fibrillation",
+      "category": "Cardiac arrhythmias",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "49436004"
+    },
+    "J44.9": {
+      "description": "Chronic obstructive pulmonary disease, unspecified",
+      "long_description": "Chronic obstructive pulmonary disease, unspecified",
+      "category": "Chronic lower respiratory diseases",
+      "chapter": "Diseases of the respiratory system",
+      "snomed_mapping": "13645005"
+    },
+    "J45.909": {
+      "description": "Asthma, unspecified",
+      "long_description": "Unspecified asthma, uncomplicated",
+      "category": "Chronic lower respiratory diseases",
+      "chapter": "Diseases of the respiratory system",
+      "snomed_mapping": "195967001"
+    },
+    "N18.9": {
+      "description": "Chronic kidney disease, unspecified",
+      "long_description": "Chronic kidney disease, unspecified stage",
+      "category": "Renal tubulo-interstitial diseases",
+      "chapter": "Diseases of the genitourinary system",
+      "snomed_mapping": "709044004"
+    },
+    "N18.6": {
+      "description": "End stage renal disease",
+      "long_description": "End stage renal disease",
+      "category": "Renal tubulo-interstitial diseases",
+      "chapter": "Diseases of the genitourinary system",
+      "snomed_mapping": "46177005"
+    },
+    "C50.919": {
+      "description": "Malignant neoplasm of breast",
+      "long_description": "Malignant neoplasm of unspecified site of unspecified female breast",
+      "category": "Malignant neoplasms of breast",
+      "chapter": "Neoplasms",
+      "snomed_mapping": "254837009"
+    },
+    "C91.00": {
+      "description": "Acute lymphoblastic leukemia",
+      "long_description": "Acute lymphoblastic leukemia not having achieved remission",
+      "category": "Malignant neoplasms of lymphoid tissue",
+      "chapter": "Neoplasms",
+      "snomed_mapping": "93143009"
+    },
+    "J18.9": {
+      "description": "Pneumonia, unspecified organism",
+      "long_description": "Pneumonia, unspecified organism",
+      "category": "Pneumonia",
+      "chapter": "Diseases of the respiratory system",
+      "snomed_mapping": "233604007"
+    },
+    "A41.9": {
+      "description": "Sepsis, unspecified organism",
+      "long_description": "Sepsis, unspecified organism",
+      "category": "Other sepsis",
+      "chapter": "Certain infectious diseases",
+      "snomed_mapping": "91302008"
+    },
+    "I63.9": {
+      "description": "Cerebral infarction, unspecified",
+      "long_description": "Cerebral infarction, unspecified",
+      "category": "Cerebrovascular diseases",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "230690007"
+    },
+    "I26.99": {
+      "description": "Other pulmonary embolism",
+      "long_description": "Other pulmonary embolism without acute cor pulmonale",
+      "category": "Pulmonary heart disease",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "59282003"
+    },
+    "I82.40": {
+      "description": "Deep vein thrombosis of lower extremity",
+      "long_description": "Acute embolism and thrombosis of unspecified deep veins of lower extremity",
+      "category": "Venous embolism and thrombosis",
+      "chapter": "Diseases of the circulatory system",
+      "snomed_mapping": "128053003"
+    },
+    "R06.02": {
+      "description": "Shortness of breath",
+      "long_description": "Shortness of breath",
+      "category": "Symptoms and signs involving the respiratory system",
+      "chapter": "Symptoms, signs and abnormal clinical findings",
+      "snomed_mapping": "267036007"
+    },
+    "R07.9": {
+      "description": "Chest pain, unspecified",
+      "long_description": "Chest pain, unspecified",
+      "category": "Symptoms and signs involving the circulatory system",
+      "chapter": "Symptoms, signs and abnormal clinical findings",
+      "snomed_mapping": "29857009"
+    },
+    "R50.9": {
+      "description": "Fever, unspecified",
+      "long_description": "Fever, unspecified",
+      "category": "General symptoms and signs",
+      "chapter": "Symptoms, signs and abnormal clinical findings",
+      "snomed_mapping": "386661006"
+    },
+    "Z87.891": {
+      "description": "Personal history of nicotine dependence",
+      "long_description": "Personal history of nicotine dependence",
+      "category": "Personal history",
+      "chapter": "Factors influencing health status",
+      "snomed_mapping": "182531007"
+    }
+  }
+}

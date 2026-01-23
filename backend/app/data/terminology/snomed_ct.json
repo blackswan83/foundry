@@ -1,0 +1,174 @@
+{
+  "version": "2024-01",
+  "description": "SNOMED CT curated subset for clinical demo",
+  "concepts": {
+    "22298006": {
+      "term": "Myocardial infarction",
+      "synonyms": ["Heart attack", "MI", "Acute MI", "STEMI", "NSTEMI"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "394659003": {
+      "term": "Acute coronary syndrome",
+      "synonyms": ["ACS", "Unstable angina", "Acute coronary event"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "44054006": {
+      "term": "Type 2 diabetes mellitus",
+      "synonyms": ["T2DM", "Type 2 diabetes", "Diabetes mellitus type 2", "Adult-onset diabetes", "NIDDM"],
+      "semantic_type": "disorder",
+      "hierarchy": "Endocrine disease"
+    },
+    "38341003": {
+      "term": "Hypertensive disorder",
+      "synonyms": ["Hypertension", "High blood pressure", "HTN", "Essential hypertension"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "84114007": {
+      "term": "Heart failure",
+      "synonyms": ["CHF", "Congestive heart failure", "Cardiac failure", "HF"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "49436004": {
+      "term": "Atrial fibrillation",
+      "synonyms": ["AFib", "A-fib", "AF", "Auricular fibrillation"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "13645005": {
+      "term": "Chronic obstructive pulmonary disease",
+      "synonyms": ["COPD", "Chronic obstructive lung disease", "COLD"],
+      "semantic_type": "disorder",
+      "hierarchy": "Respiratory disease"
+    },
+    "195967001": {
+      "term": "Asthma",
+      "synonyms": ["Bronchial asthma", "Reactive airway disease"],
+      "semantic_type": "disorder",
+      "hierarchy": "Respiratory disease"
+    },
+    "709044004": {
+      "term": "Chronic kidney disease",
+      "synonyms": ["CKD", "Chronic renal disease", "Chronic renal failure"],
+      "semantic_type": "disorder",
+      "hierarchy": "Renal disease"
+    },
+    "46177005": {
+      "term": "End-stage renal disease",
+      "synonyms": ["ESRD", "End-stage kidney disease", "Kidney failure"],
+      "semantic_type": "disorder",
+      "hierarchy": "Renal disease"
+    },
+    "254837009": {
+      "term": "Malignant neoplasm of breast",
+      "synonyms": ["Breast cancer", "Breast carcinoma", "Mammary cancer"],
+      "semantic_type": "disorder",
+      "hierarchy": "Oncology"
+    },
+    "93143009": {
+      "term": "Acute lymphoid leukemia",
+      "synonyms": ["ALL", "Acute lymphoblastic leukemia", "Lymphoblastic leukemia"],
+      "semantic_type": "disorder",
+      "hierarchy": "Oncology"
+    },
+    "233604007": {
+      "term": "Pneumonia",
+      "synonyms": ["Lung infection", "Pulmonary infection", "Community-acquired pneumonia", "CAP"],
+      "semantic_type": "disorder",
+      "hierarchy": "Respiratory disease"
+    },
+    "91302008": {
+      "term": "Sepsis",
+      "synonyms": ["Septicemia", "Blood poisoning", "Systemic infection"],
+      "semantic_type": "disorder",
+      "hierarchy": "Infectious disease"
+    },
+    "230690007": {
+      "term": "Cerebrovascular accident",
+      "synonyms": ["Stroke", "CVA", "Brain attack", "Cerebral infarction"],
+      "semantic_type": "disorder",
+      "hierarchy": "Neurological disease"
+    },
+    "59282003": {
+      "term": "Pulmonary embolism",
+      "synonyms": ["PE", "Lung clot", "Pulmonary thromboembolism"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "128053003": {
+      "term": "Deep vein thrombosis",
+      "synonyms": ["DVT", "Deep venous thrombosis", "Leg clot"],
+      "semantic_type": "disorder",
+      "hierarchy": "Cardiovascular disease"
+    },
+    "267036007": {
+      "term": "Dyspnea",
+      "synonyms": ["Shortness of breath", "SOB", "Breathlessness", "Difficulty breathing"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "29857009": {
+      "term": "Chest pain",
+      "synonyms": ["Thoracic pain", "Chest discomfort", "Angina"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "386661006": {
+      "term": "Fever",
+      "synonyms": ["Pyrexia", "Elevated temperature", "Febrile"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "25064002": {
+      "term": "Headache",
+      "synonyms": ["Cephalgia", "Head pain"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "422587007": {
+      "term": "Nausea",
+      "synonyms": ["Feeling sick", "Queasy"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "422400008": {
+      "term": "Vomiting",
+      "synonyms": ["Emesis", "Throwing up"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "62315008": {
+      "term": "Diarrhea",
+      "synonyms": ["Loose stool", "Watery stool"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "21522001": {
+      "term": "Abdominal pain",
+      "synonyms": ["Stomach pain", "Belly pain", "Abdominal discomfort"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "271807003": {
+      "term": "Rash",
+      "synonyms": ["Skin eruption", "Exanthem"],
+      "semantic_type": "finding",
+      "hierarchy": "Clinical finding"
+    },
+    "182531007": {
+      "term": "Smoking history",
+      "synonyms": ["Tobacco use", "Smoker", "Cigarette use"],
+      "semantic_type": "finding",
+      "hierarchy": "Social history"
+    },
+    "228273003": {
+      "term": "Alcohol consumption",
+      "synonyms": ["Alcohol use", "Drinking", "Ethanol use"],
+      "semantic_type": "finding",
+      "hierarchy": "Social history"
+    }
+  }
+}

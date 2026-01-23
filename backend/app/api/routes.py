@@ -932,3 +932,170 @@ async def download_deidentified_csv():
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+
+# ============ Medical Record Processing Endpoints ============
+
+from ..services.medical_record_processor import MedicalRecordProcessor
+
+# Initialize medical record processor
+medical_record_processor = MedicalRecordProcessor()
+
+
+class TextProcessingRequest(BaseModel):
+    """Request for processing medical text."""
+    text: str
+
+
+@router.get("/demo/medical-record/sample")
+async def get_sample_medical_record():
+    """
+    Get a sample discharge summary for demo purposes.
+    Returns a realistic medical document with all 18 HIPAA PHI identifiers present.
+    """
+    sample_text = medical_record_processor.get_sample_document()
+    return {
+        "sample_document": sample_text,
+        "description": "Sample Discharge Summary - Margaret Elizabeth Johnson",
+        "phi_identifiers_present": [
+            "Patient name",
+            "Date of birth",
+            "Address (geographic)",
+            "Phone numbers",
+            "Email",
+            "Social Security Number",
+            "Medical Record Number",
+            "Health Plan ID",
+            "Account numbers",
+            "License numbers",
+            "Dates (admission, discharge, procedures)",
+            "IP address",
+            "Device/document IDs"
+        ],
+        "clinical_entities_present": [
+            "Conditions: NSTEMI, Type 2 Diabetes, Hypertension, Hyperlipidemia, CAD",
+            "Medications: Metformin, Lisinopril, Atorvastatin, Aspirin, Clopidogrel",
+            "Procedures: ECG, Echo, Cardiac Catheterization, PCI with stent",
+            "Lab Tests: Troponin, HbA1c, LDL, Creatinine, CBC",
+            "Vital Signs: BP, HR, RR, Temp, SpO2"
+        ]
+    }
+
+
+@router.post("/demo/medical-record/process")
+async def process_medical_record(request: TextProcessingRequest):
+    """
+    Process medical record text through the full pipeline:
+    1. Extract clinical entities using NLP
+    2. Map entities to standard terminologies (SNOMED, ICD-10, LOINC, RxNorm, CPT)
+    3. Detect all 18 HIPAA Safe Harbor PHI identifiers
+    4. De-identify the text
+
+    Returns both original and de-identified text with all extracted information.
+    """
+    if not request.text or len(request.text.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Text content is required")
+
+    try:
+        result = medical_record_processor.process_text(request.text)
+        return medical_record_processor.to_json_result(result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+
+
+@router.post("/demo/medical-record/upload-pdf")
+async def upload_medical_record_pdf(file: UploadFile = File(...)):
+    """
+    Upload and process a PDF medical record.
+    Extracts text using OCR (if needed) and processes through the full pipeline.
+    """
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="File must be a PDF")
+
+    try:
+        content = await file.read()
+        result = medical_record_processor.process_pdf(content)
+        return medical_record_processor.to_json_result(result)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF processing error: {str(e)}")
+
+
+@router.get("/demo/medical-record/terminologies")
+async def get_available_terminologies():
+    """
+    Get information about available terminology mappings.
+    """
+    terminology_service = medical_record_processor.terminology_service
+
+    return {
+        "terminologies": [
+            {
+                "name": "SNOMED CT",
+                "description": "Systematized Nomenclature of Medicine Clinical Terms",
+                "version": terminology_service.snomed.get("version", "Unknown"),
+                "concept_count": len(terminology_service.snomed.get("concepts", {})),
+                "use_case": "Clinical diagnoses, symptoms, findings"
+            },
+            {
+                "name": "ICD-10-CM",
+                "description": "International Classification of Diseases, 10th Revision, Clinical Modification",
+                "version": terminology_service.icd10.get("version", "Unknown"),
+                "code_count": len(terminology_service.icd10.get("codes", {})),
+                "use_case": "Diagnosis coding for billing and reporting"
+            },
+            {
+                "name": "LOINC",
+                "description": "Logical Observation Identifiers Names and Codes",
+                "version": terminology_service.loinc.get("version", "Unknown"),
+                "code_count": len(terminology_service.loinc.get("codes", {})),
+                "use_case": "Laboratory tests, vital signs, clinical measurements"
+            },
+            {
+                "name": "RxNorm",
+                "description": "Normalized drug naming system",
+                "version": terminology_service.rxnorm.get("version", "Unknown"),
+                "drug_count": len(terminology_service.rxnorm.get("drugs", {})),
+                "use_case": "Medication identification and standardization"
+            },
+            {
+                "name": "CPT",
+                "description": "Current Procedural Terminology",
+                "version": terminology_service.cpt.get("version", "Unknown"),
+                "code_count": len(terminology_service.cpt.get("codes", {})),
+                "use_case": "Medical procedure coding"
+            }
+        ],
+        "safe_harbor_identifiers": [
+            {"id": 1, "name": "Names", "description": "Patient and provider names"},
+            {"id": 2, "name": "Geographic data", "description": "Addresses, ZIP codes smaller than state"},
+            {"id": 3, "name": "Dates", "description": "Except year for patients >89 years old"},
+            {"id": 4, "name": "Phone numbers", "description": "All telephone numbers"},
+            {"id": 5, "name": "Fax numbers", "description": "All fax numbers"},
+            {"id": 6, "name": "Email addresses", "description": "All email addresses"},
+            {"id": 7, "name": "Social Security Numbers", "description": "SSN"},
+            {"id": 8, "name": "Medical Record Numbers", "description": "MRN and patient IDs"},
+            {"id": 9, "name": "Health plan IDs", "description": "Insurance and beneficiary numbers"},
+            {"id": 10, "name": "Account numbers", "description": "Financial account numbers"},
+            {"id": 11, "name": "Certificate/license numbers", "description": "Professional licenses"},
+            {"id": 12, "name": "Vehicle identifiers", "description": "VINs and license plates"},
+            {"id": 13, "name": "Device identifiers", "description": "Serial numbers, UDIs"},
+            {"id": 14, "name": "Web URLs", "description": "Web addresses"},
+            {"id": 15, "name": "IP addresses", "description": "Internet protocol addresses"},
+            {"id": 16, "name": "Biometric identifiers", "description": "Fingerprints, retinal scans"},
+            {"id": 17, "name": "Full-face photographs", "description": "Identifiable images"},
+            {"id": 18, "name": "Unique identifying numbers", "description": "Any other unique identifier"}
+        ]
+    }
+
+
+@router.post("/demo/medical-record/process-sample")
+async def process_sample_medical_record():
+    """
+    Process the built-in sample discharge summary.
+    Demonstrates the complete pipeline with a realistic medical document.
+    """
+    sample_text = medical_record_processor.get_sample_document()
+    result = medical_record_processor.process_text(sample_text)
+    return medical_record_processor.to_json_result(result)
