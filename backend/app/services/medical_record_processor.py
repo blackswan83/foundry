@@ -24,7 +24,7 @@ class PHIType(str, Enum):
     """PDPL Personal Data Identifiers (based on Safe Harbor 18 PHI types)"""
     NAME = "name"
     GEOGRAPHIC = "geographic"
-    DATE = "date"
+    DOB = "dob"  # Only birth dates are identifying - clinical dates preserved for research
     PHONE = "phone"
     FAX = "fax"
     EMAIL = "email"
@@ -498,17 +498,16 @@ class SafeHarborDeidentifier:
             # ZIP codes (alone)
             r'\b\d{5}(?:-\d{4})?\b',
         ],
-        PHIType.DATE: [
-            # MM/DD/YYYY or MM-DD-YYYY
-            r'\b(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12]\d|3[01])[/-](?:19|20)\d{2}\b',
-            # YYYY-MM-DD
-            r'\b(?:19|20)\d{2}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\d|3[01])\b',
-            # Month DD, YYYY
-            r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b',
-            # DD Month YYYY
-            r'\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b',
-            # Age over 89 indicator
-            r'\b(?:age|aged?)\s*[:\s]?\s*(?:9\d|1\d{2})\b',
+        PHIType.DOB: [
+            # Only match dates in birth date context - clinical dates preserved for research/training
+            # DOB: MM/DD/YYYY or DOB: MM-DD-YYYY
+            r'\b(?:DOB|Date of Birth|Birth Date|Born|D\.O\.B\.?)[:\s]+(?:0?[1-9]|1[0-2])[/-](?:0?[1-9]|[12]\d|3[01])[/-](?:19|20)\d{2}\b',
+            # DOB: YYYY-MM-DD
+            r'\b(?:DOB|Date of Birth|Birth Date|Born|D\.O\.B\.?)[:\s]+(?:19|20)\d{2}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\d|3[01])\b',
+            # DOB: Month DD, YYYY
+            r'\b(?:DOB|Date of Birth|Birth Date|Born|D\.O\.B\.?)[:\s]+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b',
+            # Age over 89 (identifying per HIPAA/PDPL)
+            r'\b(?:age|aged?)\s*[:\s]?\s*(?:9\d|1\d{2})\s*(?:years?|yrs?|y\.?o\.?)?\b',
         ],
         PHIType.PHONE: [
             r'\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b',
@@ -572,7 +571,7 @@ class SafeHarborDeidentifier:
     REPLACEMENTS = {
         PHIType.NAME: "[PATIENT NAME]",
         PHIType.GEOGRAPHIC: "[ADDRESS]",
-        PHIType.DATE: "[DATE]",
+        PHIType.DOB: "[DOB]",
         PHIType.PHONE: "[PHONE]",
         PHIType.FAX: "[FAX]",
         PHIType.EMAIL: "[EMAIL]",

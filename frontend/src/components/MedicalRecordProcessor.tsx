@@ -81,7 +81,7 @@ const EntityTypeColors: Record<string, string> = {
 const PHITypeLabels: Record<string, string> = {
   name: 'Patient/Provider Names',
   geographic: 'Geographic Data',
-  date: 'Dates',
+  dob: 'Date of Birth',
   phone: 'Phone Numbers',
   fax: 'Fax Numbers',
   email: 'Email Addresses',
