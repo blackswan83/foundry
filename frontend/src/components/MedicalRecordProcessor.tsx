@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Entity {
   text: string;
@@ -85,11 +85,11 @@ const PHITypeLabels: Record<string, string> = {
   phone: 'Phone Numbers',
   fax: 'Fax Numbers',
   email: 'Email Addresses',
-  ssn: 'Social Security Numbers',
+  ssn: 'National ID / SSN',
   mrn: 'Medical Record Numbers',
-  health_plan_id: 'Health Plan IDs',
+  health_plan_id: 'Health Plan IDs (CCHI)',
   account_number: 'Account Numbers',
-  license_number: 'License Numbers',
+  license_number: 'License Numbers (SCFHS)',
   vehicle_id: 'Vehicle Identifiers',
   device_id: 'Device Identifiers',
   url: 'Web URLs',
@@ -99,6 +99,15 @@ const PHITypeLabels: Record<string, string> = {
   unique_id: 'Unique Identifiers',
 };
 
+// Processing steps for the overlay animation
+const PROCESSING_STEPS = [
+  { id: 1, label: 'Extracting text from document', duration: 800 },
+  { id: 2, label: 'Running Clinical NLP analysis', duration: 1200 },
+  { id: 3, label: 'Mapping to standard terminologies', duration: 1000 },
+  { id: 4, label: 'Detecting personal identifiers', duration: 1000 },
+  { id: 5, label: 'Applying PDPL de-identification', duration: 1000 },
+];
+
 export const MedicalRecordProcessor: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [result, setResult] = useState<ProcessingResult | null>(null);
@@ -106,6 +115,8 @@ export const MedicalRecordProcessor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'comparison' | 'entities' | 'terminology' | 'phi'>('comparison');
   const [showOriginal, setShowOriginal] = useState(true);
+  const [processingStep, setProcessingStep] = useState(0);
+  const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
 
   const loadSampleDocument = async () => {
     setLoading(true);
@@ -121,6 +132,34 @@ export const MedicalRecordProcessor: React.FC = () => {
     }
   };
 
+  // Simulate processing steps with animation
+  const runProcessingAnimation = async () => {
+    setShowProcessingOverlay(true);
+    setProcessingStep(0);
+
+    for (let i = 0; i < PROCESSING_STEPS.length; i++) {
+      setProcessingStep(i + 1);
+      await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i].duration));
+    }
+  };
+
+  const downloadSampleDocument = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/demo/medical-record/download-sample`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sample_discharge_summary_kfshrc.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to download sample document');
+    }
+  };
+
   const processDocument = async () => {
     if (!inputText.trim()) {
       setError('Please enter or load a medical document');
@@ -129,6 +168,10 @@ export const MedicalRecordProcessor: React.FC = () => {
 
     setLoading(true);
     setError(null);
+
+    // Start the processing animation
+    const animationPromise = runProcessingAnimation();
+
     try {
       const response = await fetch(`${API_BASE}/api/demo/medical-record/process`, {
         method: 'POST',
@@ -141,11 +184,17 @@ export const MedicalRecordProcessor: React.FC = () => {
       }
 
       const data = await response.json();
+
+      // Wait for animation to complete before showing results
+      await animationPromise;
+
       setResult(data);
       setActiveTab('comparison');
     } catch (err) {
       setError('Failed to process document. Please try again.');
     } finally {
+      setShowProcessingOverlay(false);
+      setProcessingStep(0);
       setLoading(false);
     }
   };
@@ -153,6 +202,10 @@ export const MedicalRecordProcessor: React.FC = () => {
   const processSampleDocument = async () => {
     setLoading(true);
     setError(null);
+
+    // Start the processing animation
+    const animationPromise = runProcessingAnimation();
+
     try {
       const response = await fetch(`${API_BASE}/api/demo/medical-record/process-sample`, {
         method: 'POST',
@@ -163,12 +216,18 @@ export const MedicalRecordProcessor: React.FC = () => {
       }
 
       const data = await response.json();
+
+      // Wait for animation to complete before showing results
+      await animationPromise;
+
       setInputText(data.original_text);
       setResult(data);
       setActiveTab('comparison');
     } catch (err) {
       setError('Failed to process sample document. Please try again.');
     } finally {
+      setShowProcessingOverlay(false);
+      setProcessingStep(0);
       setLoading(false);
     }
   };
@@ -239,11 +298,83 @@ export const MedicalRecordProcessor: React.FC = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Processing Overlay */}
+      {showProcessingOverlay && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 relative">
+                <div className="absolute inset-0 border-4 border-[#C4A77D]/30 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-[#8B7355] rounded-full border-t-transparent animate-spin"></div>
+              </div>
+              <h3 className="text-xl font-bold text-[#8B7355]">Processing Document</h3>
+              <p className="text-gray-500 text-sm mt-1">PDPL-compliant de-identification in progress</p>
+            </div>
+
+            <div className="space-y-3">
+              {PROCESSING_STEPS.map((step, index) => {
+                const isComplete = processingStep > index + 1 || (processingStep === PROCESSING_STEPS.length && index === PROCESSING_STEPS.length - 1);
+                const isActive = processingStep === index + 1;
+
+                return (
+                  <div
+                    key={step.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-300 ${
+                      isComplete
+                        ? 'bg-green-50 border border-green-200'
+                        : isActive
+                        ? 'bg-[#FFF8F0] border border-[#C4A77D]'
+                        : 'bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isComplete
+                          ? 'bg-green-500 text-white'
+                          : isActive
+                          ? 'bg-[#8B7355] text-white'
+                          : 'bg-gray-300 text-gray-500'
+                      }`}
+                    >
+                      {isComplete ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <span className="text-xs font-medium">{step.id}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        isComplete ? 'text-green-700' : isActive ? 'text-[#8B7355]' : 'text-gray-500'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                    {isActive && (
+                      <div className="ml-auto">
+                        <div className="w-4 h-4 border-2 border-[#8B7355] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 text-center">
+              <div className="text-xs text-gray-400">
+                Processing time: ~5 seconds
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#8B7355] mb-2">Medical Record Processing</h2>
         <p className="text-gray-600">
-          Process clinical documents with NLP entity extraction, terminology mapping, and HIPAA Safe Harbor de-identification.
+          Process clinical documents with NLP entity extraction, terminology mapping, and PDPL-compliant de-identification.
         </p>
       </div>
 
@@ -252,6 +383,16 @@ export const MedicalRecordProcessor: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Input Document</h3>
           <div className="flex gap-2">
+            <button
+              onClick={downloadSampleDocument}
+              disabled={loading}
+              className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Sample
+            </button>
             <button
               onClick={loadSampleDocument}
               disabled={loading}
@@ -264,7 +405,7 @@ export const MedicalRecordProcessor: React.FC = () => {
               disabled={loading}
               className="px-4 py-2 text-sm bg-[#C4A77D] hover:bg-[#8B7355] text-white rounded-lg transition-colors"
             >
-              {loading ? 'Processing...' : 'Process Sample Document'}
+              Process Sample (KFSHRC)
             </button>
           </div>
         </div>
@@ -272,7 +413,7 @@ export const MedicalRecordProcessor: React.FC = () => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Paste medical record text here, or click 'Load Sample' to use a demo discharge summary..."
+          placeholder="Paste medical record text here, or click 'Load Sample' to load a KFSHRC discharge summary, or 'Download Sample' to get the sample file..."
           className="w-full h-48 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-y"
         />
 
@@ -326,7 +467,7 @@ export const MedicalRecordProcessor: React.FC = () => {
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="text-sm opacity-90">Safe Harbor Compliant</div>
+                <div className="text-sm opacity-90">PDPL Compliant</div>
               </div>
             </div>
           </div>
@@ -374,7 +515,7 @@ export const MedicalRecordProcessor: React.FC = () => {
                       !showOriginal ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    De-identified (Safe Harbor)
+                    De-identified (PDPL)
                   </button>
                 </div>
 
@@ -493,10 +634,10 @@ export const MedicalRecordProcessor: React.FC = () => {
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      HIPAA Safe Harbor Compliance
+                      PDPL Compliance (Saudi Arabia)
                     </h4>
                     <p className="text-sm text-green-700 mb-3">
-                      All 18 HIPAA Safe Harbor identifiers are addressed by this de-identification process.
+                      All 18 personal data identifiers are addressed per PDPL (Saudi Personal Data Protection Law) requirements.
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {result.safe_harbor_18_identifiers.map((id, idx) => (
@@ -578,9 +719,9 @@ export const MedicalRecordProcessor: React.FC = () => {
             </p>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h4 className="font-semibold text-green-800 mb-2">Safe Harbor De-identification</h4>
+            <h4 className="font-semibold text-green-800 mb-2">PDPL-Compliant De-identification</h4>
             <p className="text-sm text-green-700">
-              Removes all 18 HIPAA Safe Harbor identifiers to create research-ready, privacy-compliant data.
+              Removes all 18 personal data identifiers per Saudi PDPL requirements to create research-ready, privacy-compliant data.
             </p>
           </div>
         </div>

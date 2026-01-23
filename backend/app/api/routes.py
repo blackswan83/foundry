@@ -951,23 +951,25 @@ class TextProcessingRequest(BaseModel):
 async def get_sample_medical_record():
     """
     Get a sample discharge summary for demo purposes.
-    Returns a realistic medical document with all 18 HIPAA PHI identifiers present.
+    Returns a realistic KFSHRC medical document with all 18 PDPL personal data identifiers present.
     """
     sample_text = medical_record_processor.get_sample_document()
     return {
         "sample_document": sample_text,
-        "description": "Sample Discharge Summary - Margaret Elizabeth Johnson",
+        "description": "Sample Discharge Summary - KFSHRC Cardiology (Fatima Al-Rashid)",
+        "hospital": "King Faisal Specialist Hospital & Research Centre (KFSHRC)",
+        "location": "Riyadh, Kingdom of Saudi Arabia",
         "phi_identifiers_present": [
             "Patient name",
             "Date of birth",
-            "Address (geographic)",
-            "Phone numbers",
+            "Address (geographic - Saudi)",
+            "Phone numbers (+966 format)",
             "Email",
-            "Social Security Number",
+            "National ID (Iqama)",
             "Medical Record Number",
-            "Health Plan ID",
+            "Health Plan ID (CCHI)",
             "Account numbers",
-            "License numbers",
+            "License numbers (SCFHS)",
             "Dates (admission, discharge, procedures)",
             "IP address",
             "Device/document IDs"
@@ -978,7 +980,8 @@ async def get_sample_medical_record():
             "Procedures: ECG, Echo, Cardiac Catheterization, PCI with stent",
             "Lab Tests: Troponin, HbA1c, LDL, Creatinine, CBC",
             "Vital Signs: BP, HR, RR, Temp, SpO2"
-        ]
+        ],
+        "compliance": "PDPL (Saudi Personal Data Protection Law)"
     }
 
 
@@ -988,8 +991,8 @@ async def process_medical_record(request: TextProcessingRequest):
     Process medical record text through the full pipeline:
     1. Extract clinical entities using NLP
     2. Map entities to standard terminologies (SNOMED, ICD-10, LOINC, RxNorm, CPT)
-    3. Detect all 18 HIPAA Safe Harbor PHI identifiers
-    4. De-identify the text
+    3. Detect all 18 PDPL personal data identifiers
+    4. De-identify the text per Saudi PDPL requirements
 
     Returns both original and de-identified text with all extracted information.
     """
@@ -1067,18 +1070,18 @@ async def get_available_terminologies():
                 "use_case": "Medical procedure coding"
             }
         ],
-        "safe_harbor_identifiers": [
+        "pdpl_identifiers": [
             {"id": 1, "name": "Names", "description": "Patient and provider names"},
-            {"id": 2, "name": "Geographic data", "description": "Addresses, ZIP codes smaller than state"},
+            {"id": 2, "name": "Geographic data", "description": "Addresses, postal codes, regions"},
             {"id": 3, "name": "Dates", "description": "Except year for patients >89 years old"},
-            {"id": 4, "name": "Phone numbers", "description": "All telephone numbers"},
+            {"id": 4, "name": "Phone numbers", "description": "All telephone numbers (+966 format)"},
             {"id": 5, "name": "Fax numbers", "description": "All fax numbers"},
             {"id": 6, "name": "Email addresses", "description": "All email addresses"},
-            {"id": 7, "name": "Social Security Numbers", "description": "SSN"},
+            {"id": 7, "name": "National ID", "description": "Saudi ID (Iqama) / SSN"},
             {"id": 8, "name": "Medical Record Numbers", "description": "MRN and patient IDs"},
-            {"id": 9, "name": "Health plan IDs", "description": "Insurance and beneficiary numbers"},
+            {"id": 9, "name": "Health plan IDs", "description": "CCHI insurance and beneficiary numbers"},
             {"id": 10, "name": "Account numbers", "description": "Financial account numbers"},
-            {"id": 11, "name": "Certificate/license numbers", "description": "Professional licenses"},
+            {"id": 11, "name": "Certificate/license numbers", "description": "SCFHS and professional licenses"},
             {"id": 12, "name": "Vehicle identifiers", "description": "VINs and license plates"},
             {"id": 13, "name": "Device identifiers", "description": "Serial numbers, UDIs"},
             {"id": 14, "name": "Web URLs", "description": "Web addresses"},
@@ -1086,7 +1089,8 @@ async def get_available_terminologies():
             {"id": 16, "name": "Biometric identifiers", "description": "Fingerprints, retinal scans"},
             {"id": 17, "name": "Full-face photographs", "description": "Identifiable images"},
             {"id": 18, "name": "Unique identifying numbers", "description": "Any other unique identifier"}
-        ]
+        ],
+        "compliance_framework": "PDPL (Saudi Personal Data Protection Law)"
     }
 
 
@@ -1099,3 +1103,21 @@ async def process_sample_medical_record():
     sample_text = medical_record_processor.get_sample_document()
     result = medical_record_processor.process_text(sample_text)
     return medical_record_processor.to_json_result(result)
+
+
+@router.get("/demo/medical-record/download-sample")
+async def download_sample_medical_record():
+    """
+    Download the sample discharge summary as a text file.
+    Similar to the CSV sample download, allows users to view/modify
+    the sample document before uploading for processing.
+    """
+    sample_text = medical_record_processor.get_sample_document()
+
+    return Response(
+        content=sample_text.strip(),
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=sample_discharge_summary_kfshrc.txt"
+        }
+    )

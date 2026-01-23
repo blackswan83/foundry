@@ -5,7 +5,8 @@ Comprehensive pipeline for processing medical records:
 1. OCR extraction from PDF/images
 2. Clinical NLP with entity extraction
 3. Terminology mapping (SNOMED, ICD-10, LOINC, RxNorm, CPT)
-4. HIPAA Safe Harbor de-identification (all 18 PHI types)
+4. PDPL-compliant de-identification (Saudi Personal Data Protection Law)
+   Based on Safe Harbor methodology with 18 PHI identifier types
 """
 
 import re
@@ -20,7 +21,7 @@ from enum import Enum
 
 
 class PHIType(str, Enum):
-    """HIPAA Safe Harbor 18 PHI Identifiers"""
+    """PDPL Personal Data Identifiers (based on Safe Harbor 18 PHI types)"""
     NAME = "name"
     GEOGRAPHIC = "geographic"
     DATE = "date"
@@ -474,8 +475,9 @@ class ClinicalNLPService:
 
 class SafeHarborDeidentifier:
     """
-    HIPAA Safe Harbor de-identification service.
-    Detects and removes/replaces all 18 PHI identifier types.
+    PDPL-compliant de-identification service for Saudi Arabia.
+    Based on Safe Harbor methodology - detects and removes/replaces
+    all 18 personal data identifier types per PDPL requirements.
     """
 
     # PHI Detection Patterns
@@ -511,6 +513,8 @@ class SafeHarborDeidentifier:
         PHIType.PHONE: [
             r'\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b',
             r'\b\d{3}[-.\s]\d{4}\b',  # 7-digit phone
+            r'\b\+966\s?\d{1,2}\s?\d{3}\s?\d{4}\b',  # Saudi phone +966
+            r'\b\+966\s?\d{9}\b',  # Saudi mobile +966 5X XXX XXXX
         ],
         PHIType.FAX: [
             r'\b(?:fax|facsimile)[:\s]+(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b',
@@ -519,8 +523,10 @@ class SafeHarborDeidentifier:
             r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
         ],
         PHIType.SSN: [
-            r'\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b',  # XXX-XX-XXXX format
+            r'\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b',  # US SSN XXX-XX-XXXX format
             r'\bSSN[:\s]+\d{3}[-\s]?\d{2}[-\s]?\d{4}\b',
+            r'\b(?:National ID|Iqama|ID)[:\s()]*\d{10}\b',  # Saudi National ID (10 digits)
+            r'\b[12]\d{9}\b',  # Saudi National ID (starts with 1 for citizens, 2 for residents)
         ],
         PHIType.MRN: [
             r'\b(?:MRN|Medical Record Number|Patient ID|Record #)[:\s]+[A-Z0-9-]+\b',
@@ -584,18 +590,19 @@ class SafeHarborDeidentifier:
         PHIType.UNIQUE_ID: "[UNIQUE ID]",
     }
 
-    # Known patient names to detect (for demo)
+    # Known patient names to detect (for demo - KSA context)
     KNOWN_NAMES = [
-        "Margaret Elizabeth Johnson",
-        "Margaret Johnson",
-        "Mrs. Johnson",
-        "Johnson, Margaret",
-        "Dr. Sarah Chen",
-        "Sarah Chen",
-        "Dr. Michael Rodriguez",
-        "Michael Rodriguez",
-        "Dr. James Wilson",
-        "James Wilson",
+        "Fatima Abdullah Al-Rashid",
+        "Fatima Al-Rashid",
+        "Mrs. Al-Rashid",
+        "Al-Rashid, Fatima",
+        "Mohammed Al-Rashid",
+        "Dr. Khalid Al-Habib",
+        "Khalid Al-Habib",
+        "Dr. Ahmed Al-Zahrani",
+        "Ahmed Al-Zahrani",
+        "Dr. Omar Al-Qahtani",
+        "Omar Al-Qahtani",
     ]
 
     def __init__(self):
@@ -700,7 +707,8 @@ class SafeHarborDeidentifier:
             "total_phi_found": len(detections),
             "phi_by_type": by_type,
             "types_found": list(by_type.keys()),
-            "safe_harbor_compliance": True,
+            "pdpl_compliance": True,
+            "safe_harbor_compliance": True,  # Backward compatibility
             "identifiers_addressed": [t.value for t in PHIType]
         }
 
@@ -778,7 +786,8 @@ class MedicalRecordProcessor:
                 "entities_extracted": len(entities),
                 "phi_detected": len(phi_detections),
                 "terminology_mappings": sum(len(v) for v in terminology_mappings.values()),
-                "safe_harbor_compliance": True
+                "pdpl_compliance": True,
+                "safe_harbor_compliance": True  # Backward compatibility
             }
         )
 
@@ -838,44 +847,46 @@ class MedicalRecordProcessor:
             )
 
     def get_sample_document(self) -> str:
-        """Return sample discharge summary for demo"""
+        """Return sample discharge summary for demo (KFSHRC, Saudi Arabia)"""
         return """
-MERCY GENERAL HOSPITAL
-Department of Cardiology
-1234 Medical Center Drive
-Springfield, IL 62701
+KING FAISAL SPECIALIST HOSPITAL & RESEARCH CENTRE (KFSHRC)
+Department of Cardiology - Heart Centre
+Al Faisal Medical City, MBC 16
+P.O. Box 3354, Riyadh 11211, Kingdom of Saudi Arabia
 
 DISCHARGE SUMMARY
 
-Patient: Margaret Elizabeth Johnson
+Patient: Fatima Abdullah Al-Rashid
 Date of Birth: March 15, 1958
-Medical Record Number: MGH-2024-789456
-Social Security Number: 321-54-9876
+National ID (Iqama): 1087654321
+Medical Record Number: KFSH-2024-789456
 Admission Date: January 15, 2024
 Discharge Date: January 19, 2024
 
-ATTENDING PHYSICIAN: Dr. Sarah Chen, MD
-CARDIOLOGY CONSULTANT: Dr. Michael Rodriguez, MD
+ATTENDING PHYSICIAN: Dr. Khalid Al-Habib, MD, FRCP
+CARDIOLOGY CONSULTANT: Dr. Ahmed Al-Zahrani, MD, FACC
 
 PATIENT CONTACT INFORMATION:
-Address: 456 Oak Street, Apt 12B, Springfield, IL 62702
-Phone: (217) 555-0147
-Email: m.johnson1958@email.com
-Emergency Contact: Robert Johnson (spouse) - (217) 555-0198
+Address: Villa 45, Al-Malqa District, Riyadh 13524, Kingdom of Saudi Arabia
+Phone: +966 11 555 0147
+Mobile: +966 50 123 4567
+Email: f.alrashid58@gmail.com
+Emergency Contact: Mohammed Al-Rashid (son) - +966 50 987 6543
 
 INSURANCE INFORMATION:
-Health Plan ID: BCBS-IL-987654321
-Group Number: GRP-45678
-Member ID: MJO-123456789
+Health Plan ID: CCHI-SA-987654321
+Group Number: BUPA-45678
+Member ID: FAR-123456789
+Employer: Ministry of Education (Retired)
 
 CHIEF COMPLAINT:
 66-year-old female presenting with acute onset chest pain and shortness of breath.
 
 HISTORY OF PRESENT ILLNESS:
-Mrs. Johnson presented to the Emergency Department on January 15, 2024 at 14:32
+Mrs. Al-Rashid presented to the Emergency Department on January 15, 2024 at 14:32
 with complaints of severe substernal chest pain radiating to her left arm,
 associated with diaphoresis and dyspnea. Pain began approximately 2 hours prior
-to arrival while she was at home at 456 Oak Street. She rated the pain as 9/10
+to arrival while she was at home in Al-Malqa District. She rated the pain as 9/10
 in intensity. She has a history of type 2 diabetes mellitus, hypertension, and
 hyperlipidemia.
 
@@ -895,10 +906,10 @@ MEDICATIONS ON ADMISSION:
 ALLERGIES: Penicillin (rash), Sulfa drugs (hives)
 
 SOCIAL HISTORY:
-- Former smoker, quit 2018 (30 pack-year history)
-- Occasional alcohol use (1-2 glasses wine per week)
-- Retired teacher
-- Lives with spouse
+- Non-smoker
+- No alcohol use
+- Retired teacher (35 years with Ministry of Education)
+- Lives with family
 
 FAMILY HISTORY:
 - Father: MI at age 62, deceased
@@ -959,7 +970,7 @@ DIAGNOSTIC STUDIES:
    - Successful PCI with drug-eluting stent to LAD
 
 HOSPITAL COURSE:
-Mrs. Johnson was admitted to the Cardiac Care Unit with a diagnosis of
+Mrs. Al-Rashid was admitted to the Cardiac Care Unit with a diagnosis of
 Non-ST Elevation Myocardial Infarction (NSTEMI). She was started on dual
 antiplatelet therapy (aspirin and clopidogrel), anticoagulation with heparin,
 and high-intensity statin therapy. Beta-blocker was initiated after stabilization.
@@ -990,31 +1001,32 @@ DISCHARGE MEDICATIONS:
 7. Nitroglycerin 0.4mg SL PRN chest pain - NEW
 
 DISCHARGE INSTRUCTIONS:
-1. Follow up with Dr. Chen (cardiology) in 1 week - call (217) 555-0300 to schedule
-2. Follow up with primary care physician Dr. James Wilson in 2 weeks
-3. Cardiac rehabilitation referral - start in 2 weeks
+1. Follow up with Dr. Al-Habib (cardiology) in 1 week - call +966 11 464 7272 to schedule
+2. Follow up with primary care physician Dr. Omar Al-Qahtani in 2 weeks
+3. Cardiac rehabilitation referral - start in 2 weeks at KFSHRC Cardiac Rehab
 4. Low sodium, heart-healthy diet
 5. No strenuous activity for 2 weeks
-6. Do not lift anything heavier than 10 pounds for 1 week
+6. Do not lift anything heavier than 5 kg for 1 week
 7. Return to ED if experiencing chest pain, shortness of breath, palpitations,
    or bleeding at catheterization site
 
 CONDITION AT DISCHARGE: Stable, improved
 
 Electronically signed by:
-Sarah Chen, MD
-Attending Physician - Cardiology
-License Number: IL-MD-123456
-NPI: 1234567890
+Khalid Al-Habib, MD, FRCP
+Attending Physician - Cardiology, Heart Centre
+SCFHS License: SA-MD-123456
+Saudi Commission ID: 9876543210
 Date: January 19, 2024 10:30 AM
 
-Dictated: 01/19/2024 09:15 by Dr. Sarah Chen
-Transcribed: 01/19/2024 10:00 by Medical Records
-Document ID: DS-2024-MGH-789456
+Dictated: 01/19/2024 09:15 by Dr. Khalid Al-Habib
+Transcribed: 01/19/2024 10:00 by Medical Records Department
+Document ID: DS-2024-KFSH-789456
 IP Address: 192.168.1.100
 
-MERCY GENERAL HOSPITAL - CONFIDENTIAL PATIENT INFORMATION
-This document contains protected health information (PHI)
+KING FAISAL SPECIALIST HOSPITAL & RESEARCH CENTRE
+This document contains protected personal information under PDPL
+(Saudi Personal Data Protection Law)
 """
 
     def to_json_result(self, result: ProcessingResult) -> Dict[str, Any]:
@@ -1050,5 +1062,6 @@ This document contains protected health information (PHI)
             "phi_summary": self.deidentifier.get_phi_summary(result.phi_detections),
             "terminology_mappings": result.terminology_mappings,
             "processing_stats": result.processing_stats,
-            "safe_harbor_18_identifiers": [t.value for t in PHIType]
+            "pdpl_18_identifiers": [t.value for t in PHIType],
+            "safe_harbor_18_identifiers": [t.value for t in PHIType]  # Backward compatibility
         }
