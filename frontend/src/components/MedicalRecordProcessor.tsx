@@ -110,6 +110,9 @@ const PROCESSING_STEPS = [
 
 const MIN_PROCESSING_TIME = 5000; // Minimum 5 seconds for the overlay
 
+// Helper to wait for next frame (ensures React renders)
+const waitForRender = () => new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
+
 export const MedicalRecordProcessor: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [result, setResult] = useState<ProcessingResult | null>(null);
@@ -134,58 +137,49 @@ export const MedicalRecordProcessor: React.FC = () => {
     }
   };
 
-  // Run the processing animation with guaranteed timing
-  const runProcessingWithAnimation = async (apiCall: () => Promise<any>) => {
-    const startTime = Date.now();
-    setShowProcessingOverlay(true);
-    setProcessingStep(0);
-
-    // Start the animation steps
-    const animationPromise = (async () => {
-      for (let i = 0; i < PROCESSING_STEPS.length; i++) {
-        setProcessingStep(i + 1);
-        await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i].duration));
-      }
-    })();
-
-    // Run API call in parallel
-    const apiPromise = apiCall();
-
-    // Wait for BOTH animation AND API to complete
-    const [_, apiResult] = await Promise.all([animationPromise, apiPromise]);
-
-    // Ensure minimum time has passed
-    const elapsed = Date.now() - startTime;
-    if (elapsed < MIN_PROCESSING_TIME) {
-      await new Promise(resolve => setTimeout(resolve, MIN_PROCESSING_TIME - elapsed));
-    }
-
-    return apiResult;
-  };
-
   const processDocument = async () => {
     if (!inputText.trim()) {
       setError('Please enter or load a medical document');
       return;
     }
 
+    const startTime = Date.now();
     setLoading(true);
     setError(null);
+    setShowProcessingOverlay(true);
+    setProcessingStep(1);
+
+    // Wait for overlay to render
+    await waitForRender();
 
     try {
-      const data = await runProcessingWithAnimation(async () => {
-        const response = await fetch(`${API_BASE}/api/demo/medical-record/process`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: inputText }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Processing failed');
-        }
-
+      // Start API call immediately
+      const apiPromise = fetch(`${API_BASE}/api/demo/medical-record/process`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: inputText }),
+      }).then(response => {
+        if (!response.ok) throw new Error('Processing failed');
         return response.json();
       });
+
+      // Run animation steps (each step takes 1 second)
+      for (let i = 1; i < PROCESSING_STEPS.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i - 1].duration));
+        setProcessingStep(i + 1);
+      }
+
+      // Wait for final step duration
+      await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[PROCESSING_STEPS.length - 1].duration));
+
+      // Wait for API to complete
+      const data = await apiPromise;
+
+      // Ensure minimum time has passed
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_PROCESSING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_PROCESSING_TIME - elapsed));
+      }
 
       setResult(data);
       setActiveTab('comparison');
@@ -199,21 +193,41 @@ export const MedicalRecordProcessor: React.FC = () => {
   };
 
   const processSampleDocument = async () => {
+    const startTime = Date.now();
     setLoading(true);
     setError(null);
+    setShowProcessingOverlay(true);
+    setProcessingStep(1);
+
+    // Wait for overlay to render
+    await waitForRender();
 
     try {
-      const data = await runProcessingWithAnimation(async () => {
-        const response = await fetch(`${API_BASE}/api/demo/medical-record/process-sample`, {
-          method: 'POST',
-        });
-
-        if (!response.ok) {
-          throw new Error('Processing failed');
-        }
-
+      // Start API call immediately
+      const apiPromise = fetch(`${API_BASE}/api/demo/medical-record/process-sample`, {
+        method: 'POST',
+      }).then(response => {
+        if (!response.ok) throw new Error('Processing failed');
         return response.json();
       });
+
+      // Run animation steps (each step takes 1 second)
+      for (let i = 1; i < PROCESSING_STEPS.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i - 1].duration));
+        setProcessingStep(i + 1);
+      }
+
+      // Wait for final step duration
+      await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[PROCESSING_STEPS.length - 1].duration));
+
+      // Wait for API to complete
+      const data = await apiPromise;
+
+      // Ensure minimum time has passed
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_PROCESSING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_PROCESSING_TIME - elapsed));
+      }
 
       setInputText(data.original_text);
       setResult(data);
