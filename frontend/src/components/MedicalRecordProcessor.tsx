@@ -101,12 +101,14 @@ const PHITypeLabels: Record<string, string> = {
 
 // Processing steps for the overlay animation
 const PROCESSING_STEPS = [
-  { id: 1, label: 'Extracting text from document', duration: 800 },
-  { id: 2, label: 'Running Clinical NLP analysis', duration: 1200 },
+  { id: 1, label: 'Extracting text from document', duration: 1000 },
+  { id: 2, label: 'Running Clinical NLP analysis', duration: 1000 },
   { id: 3, label: 'Mapping to standard terminologies', duration: 1000 },
   { id: 4, label: 'Detecting personal identifiers', duration: 1000 },
   { id: 5, label: 'Applying PDPL de-identification', duration: 1000 },
 ];
+
+const MIN_PROCESSING_TIME = 5000; // Minimum 5 seconds for the overlay
 
 export const MedicalRecordProcessor: React.FC = () => {
   const [inputText, setInputText] = useState('');
@@ -132,32 +134,33 @@ export const MedicalRecordProcessor: React.FC = () => {
     }
   };
 
-  // Simulate processing steps with animation
-  const runProcessingAnimation = async () => {
+  // Run the processing animation with guaranteed timing
+  const runProcessingWithAnimation = async (apiCall: () => Promise<any>) => {
+    const startTime = Date.now();
     setShowProcessingOverlay(true);
     setProcessingStep(0);
 
-    for (let i = 0; i < PROCESSING_STEPS.length; i++) {
-      setProcessingStep(i + 1);
-      await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i].duration));
-    }
-  };
+    // Start the animation steps
+    const animationPromise = (async () => {
+      for (let i = 0; i < PROCESSING_STEPS.length; i++) {
+        setProcessingStep(i + 1);
+        await new Promise(resolve => setTimeout(resolve, PROCESSING_STEPS[i].duration));
+      }
+    })();
 
-  const downloadSampleDocument = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/demo/medical-record/download-sample`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'sample_discharge_summary_kfshrc.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      setError('Failed to download sample document');
+    // Run API call in parallel
+    const apiPromise = apiCall();
+
+    // Wait for BOTH animation AND API to complete
+    const [_, apiResult] = await Promise.all([animationPromise, apiPromise]);
+
+    // Ensure minimum time has passed
+    const elapsed = Date.now() - startTime;
+    if (elapsed < MIN_PROCESSING_TIME) {
+      await new Promise(resolve => setTimeout(resolve, MIN_PROCESSING_TIME - elapsed));
     }
+
+    return apiResult;
   };
 
   const processDocument = async () => {
@@ -169,24 +172,20 @@ export const MedicalRecordProcessor: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Start the processing animation
-    const animationPromise = runProcessingAnimation();
-
     try {
-      const response = await fetch(`${API_BASE}/api/demo/medical-record/process`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: inputText }),
+      const data = await runProcessingWithAnimation(async () => {
+        const response = await fetch(`${API_BASE}/api/demo/medical-record/process`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: inputText }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Processing failed');
+        }
+
+        return response.json();
       });
-
-      if (!response.ok) {
-        throw new Error('Processing failed');
-      }
-
-      const data = await response.json();
-
-      // Wait for animation to complete before showing results
-      await animationPromise;
 
       setResult(data);
       setActiveTab('comparison');
@@ -203,22 +202,18 @@ export const MedicalRecordProcessor: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Start the processing animation
-    const animationPromise = runProcessingAnimation();
-
     try {
-      const response = await fetch(`${API_BASE}/api/demo/medical-record/process-sample`, {
-        method: 'POST',
+      const data = await runProcessingWithAnimation(async () => {
+        const response = await fetch(`${API_BASE}/api/demo/medical-record/process-sample`, {
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('Processing failed');
+        }
+
+        return response.json();
       });
-
-      if (!response.ok) {
-        throw new Error('Processing failed');
-      }
-
-      const data = await response.json();
-
-      // Wait for animation to complete before showing results
-      await animationPromise;
 
       setInputText(data.original_text);
       setResult(data);
@@ -383,22 +378,22 @@ export const MedicalRecordProcessor: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Input Document</h3>
           <div className="flex gap-2">
-            <button
-              onClick={downloadSampleDocument}
-              disabled={loading}
-              className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-1"
+            <a
+              href="/sample_discharge_summary_kfshrc.pdf"
+              download
+              className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-1 no-underline"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Download Sample
-            </button>
+              Download Sample PDF
+            </a>
             <button
               onClick={loadSampleDocument}
               disabled={loading}
               className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
             >
-              Load Sample
+              Load Sample Text
             </button>
             <button
               onClick={processSampleDocument}
@@ -413,7 +408,7 @@ export const MedicalRecordProcessor: React.FC = () => {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Paste medical record text here, or click 'Load Sample' to load a KFSHRC discharge summary, or 'Download Sample' to get the sample file..."
+          placeholder="Paste medical record text here, or click 'Download Sample PDF' to get the KFSHRC discharge summary. Then click 'Process Sample' to run the de-identification pipeline..."
           className="w-full h-48 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-y"
         />
 
