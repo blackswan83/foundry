@@ -141,6 +141,7 @@ class TerminologyService:
         """Find matching SNOMED CT concept"""
         text_lower = text.lower().strip()
 
+        # First pass: look for exact matches only
         for code, concept in self.snomed.get("concepts", {}).items():
             term = concept.get("term", "").lower()
             synonyms = [s.lower() for s in concept.get("synonyms", [])]
@@ -153,45 +154,120 @@ class TerminologyService:
                     "semantic_type": concept.get("semantic_type")
                 }
 
-            # Partial match
-            if text_lower in term or any(text_lower in syn for syn in synonyms):
-                return {
-                    "code": code,
-                    "term": concept.get("term"),
-                    "system": "SNOMED CT",
-                    "semantic_type": concept.get("semantic_type"),
-                    "match_type": "partial"
-                }
-        return None
+        # Second pass: word-based matching (all words must be present)
+        text_words = set(text_lower.split())
+        best_match = None
+        best_score = 0
+
+        for code, concept in self.snomed.get("concepts", {}).items():
+            term = concept.get("term", "").lower()
+            synonyms = [s.lower() for s in concept.get("synonyms", [])]
+
+            # Check against term and synonyms
+            for candidate in [term] + synonyms:
+                candidate_words = set(candidate.split())
+                # Count matching words
+                common_words = text_words & candidate_words
+                if len(common_words) >= min(2, len(text_words)) and len(common_words) >= len(text_words) * 0.6:
+                    score = len(common_words) / max(len(text_words), len(candidate_words))
+                    if score > best_score:
+                        best_score = score
+                        best_match = {
+                            "code": code,
+                            "term": concept.get("term"),
+                            "system": "SNOMED CT",
+                            "semantic_type": concept.get("semantic_type"),
+                            "match_type": "partial" if score < 1.0 else "exact"
+                        }
+
+        return best_match
 
     def find_icd10_match(self, text: str) -> Optional[Dict]:
         """Find matching ICD-10-CM code"""
         text_lower = text.lower().strip()
+        text_words = set(text_lower.split())
+
+        best_match = None
+        best_score = 0
 
         for code, info in self.icd10.get("codes", {}).items():
             desc = info.get("description", "").lower()
             long_desc = info.get("long_description", "").lower()
 
-            if text_lower in desc or text_lower in long_desc:
-                return {
-                    "code": code,
-                    "description": info.get("description"),
-                    "system": "ICD-10-CM",
-                    "category": info.get("category"),
-                    "snomed_mapping": info.get("snomed_mapping")
-                }
-        return None
+            # Check for key clinical term matches
+            for candidate in [desc, long_desc]:
+                candidate_words = set(candidate.split())
+                common_words = text_words & candidate_words
+
+                # Need at least 60% word overlap and minimum 2 words (or all if less)
+                if len(common_words) >= min(2, len(text_words)) and len(common_words) >= len(text_words) * 0.6:
+                    score = len(common_words) / max(len(text_words), len(candidate_words))
+                    if score > best_score:
+                        best_score = score
+                        best_match = {
+                            "code": code,
+                            "description": info.get("description"),
+                            "system": "ICD-10-CM",
+                            "category": info.get("category"),
+                            "snomed_mapping": info.get("snomed_mapping")
+                        }
+
+        return best_match
 
     def find_loinc_match(self, text: str) -> Optional[Dict]:
         """Find matching LOINC code"""
         text_lower = text.lower().strip()
 
-        for code, info in self.loinc.get("codes", {}).items():
-            component = info.get("component", "").lower()
-            short_name = info.get("short_name", "").lower()
-            long_name = info.get("long_name", "").lower()
+        # Common lab test name mappings to LOINC short names
+        lab_aliases = {
+            "troponin": "troponin i cardiac",
+            "troponin i": "troponin i cardiac",
+            "hs-troponin": "hs-troponin i",
+            "hba1c": "hba1c",
+            "hemoglobin a1c": "hba1c",
+            "a1c": "hba1c",
+            "ldl": "ldl cholesterol",
+            "hdl": "hdl cholesterol",
+            "total cholesterol": "total cholesterol",
+            "cholesterol": "total cholesterol",
+            "triglycerides": "triglycerides",
+            "creatinine": "creatinine",
+            "bun": "bun",
+            "egfr": "egfr",
+            "gfr": "egfr",
+            "glucose": "glucose",
+            "blood sugar": "glucose",
+            "hemoglobin": "hemoglobin",
+            "hematocrit": "hematocrit",
+            "wbc": "wbc",
+            "white blood cell": "wbc",
+            "platelets": "platelets",
+            "sodium": "sodium",
+            "potassium": "potassium",
+            "chloride": "chloride",
+            "ast": "ast",
+            "alt": "alt",
+            "blood pressure": "sbp",
+            "systolic": "sbp",
+            "diastolic": "dbp",
+            "heart rate": "heart rate",
+            "pulse": "heart rate",
+            "temperature": "temperature",
+            "respiratory rate": "resp rate",
+            "oxygen saturation": "spo2",
+            "spo2": "spo2",
+            "o2 sat": "spo2",
+        }
 
-            if text_lower in component or text_lower in short_name or text_lower == short_name:
+        # Check for alias match first
+        search_term = lab_aliases.get(text_lower, text_lower)
+
+        for code, info in self.loinc.get("codes", {}).items():
+            short_name = info.get("short_name", "").lower()
+            component = info.get("component", "").lower()
+
+            # Exact match on short name
+            if search_term == short_name:
                 return {
                     "code": code,
                     "name": info.get("short_name"),
@@ -199,18 +275,34 @@ class TerminologyService:
                     "unit": info.get("unit"),
                     "reference_range": info.get("reference_range")
                 }
+
+            # Search term is contained in short_name or component
+            if search_term in short_name or search_term in component:
+                return {
+                    "code": code,
+                    "name": info.get("short_name"),
+                    "system": "LOINC",
+                    "unit": info.get("unit"),
+                    "reference_range": info.get("reference_range")
+                }
+
         return None
 
     def find_rxnorm_match(self, text: str) -> Optional[Dict]:
         """Find matching RxNorm drug"""
         text_lower = text.lower().strip()
 
+        # Remove dosage info to get just the drug name
+        import re
+        drug_name = re.sub(r'\s*\d+\s*(mg|mcg|ml|units?|g)\b.*', '', text_lower).strip()
+
+        # First pass: exact matches
         for code, drug in self.rxnorm.get("drugs", {}).items():
             name = drug.get("name", "").lower()
             generic = drug.get("generic_name", "").lower()
             brands = [b.lower() for b in drug.get("brand_names", [])]
 
-            if text_lower == name or text_lower == generic or text_lower in brands:
+            if drug_name == name or drug_name == generic or drug_name in brands:
                 return {
                     "code": code,
                     "name": drug.get("name"),
@@ -220,15 +312,22 @@ class TerminologyService:
                     "common_doses": drug.get("common_doses")
                 }
 
-            # Partial match
-            if text_lower in name or text_lower in generic:
+        # Second pass: drug name starts with or is contained in the reference
+        for code, drug in self.rxnorm.get("drugs", {}).items():
+            name = drug.get("name", "").lower()
+            generic = drug.get("generic_name", "").lower()
+
+            if name.startswith(drug_name) or generic.startswith(drug_name):
                 return {
                     "code": code,
                     "name": drug.get("name"),
+                    "generic_name": drug.get("generic_name"),
                     "system": "RxNorm",
                     "drug_class": drug.get("drug_class"),
+                    "common_doses": drug.get("common_doses"),
                     "match_type": "partial"
                 }
+
         return None
 
     def find_cpt_match(self, text: str) -> Optional[Dict]:
