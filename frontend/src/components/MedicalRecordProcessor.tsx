@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface Entity {
   text: string;
@@ -112,7 +112,10 @@ const MIN_PROCESSING_TIME = 5000;
 
 const waitForRender = () => new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
 
+type InputMode = 'text' | 'upload';
+
 export const MedicalRecordProcessor: React.FC = () => {
+  const [inputMode, setInputMode] = useState<InputMode>('upload');
   const [inputText, setInputText] = useState('');
   const [result, setResult] = useState<ProcessingResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -121,6 +124,89 @@ export const MedicalRecordProcessor: React.FC = () => {
   const [showOriginal, setShowOriginal] = useState(true);
   const [processingStep, setProcessingStep] = useState(0);
   const [showProcessingOverlay, setShowProcessingOverlay] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.txt')) {
+      setError('Please upload a PDF or TXT file');
+      return;
+    }
+
+    const startTime = Date.now();
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setUploadedFileName(file.name);
+    setShowProcessingOverlay(true);
+    setProcessingStep(1);
+
+    await waitForRender();
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const apiPromise = fetch(`${API_BASE}/api/demo/medical-record/upload`, {
+        method: 'POST',
+        body: formData,
+      }).then(response => {
+        if (!response.ok) throw new Error('Processing failed');
+        return response.json();
+      });
+
+      // Run animation steps
+      for (let i = 1; i < PROCESSING_STEPS.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setProcessingStep(i + 1);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const data = await apiPromise;
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_PROCESSING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_PROCESSING_TIME - elapsed));
+      }
+
+      setInputText(data.original_text);
+      setResult(data);
+      setActiveTab('comparison');
+    } catch (err) {
+      setError('Failed to process uploaded file. Please try again.');
+    } finally {
+      setShowProcessingOverlay(false);
+      setProcessingStep(0);
+      setLoading(false);
+    }
+  };
 
   const loadSampleDocument = async () => {
     setLoading(true);
@@ -349,48 +435,108 @@ export const MedicalRecordProcessor: React.FC = () => {
         <p>Process clinical documents with NLP entity extraction, terminology mapping, and PDPL-compliant de-identification.</p>
       </div>
 
+      {/* Mode Toggle */}
+      <div className="mode-toggle">
+        <button
+          className={`mode-btn ${inputMode === 'upload' ? 'active' : ''}`}
+          onClick={() => setInputMode('upload')}
+          disabled={loading}
+        >
+          Upload PDF
+        </button>
+        <button
+          className={`mode-btn ${inputMode === 'text' ? 'active' : ''}`}
+          onClick={() => setInputMode('text')}
+          disabled={loading}
+        >
+          Paste Text
+        </button>
+      </div>
+
       {/* Input Section */}
-      <div className="result-card">
-        <div className="input-header">
-          <h3>Input Document</h3>
-          <div className="input-actions">
+      {inputMode === 'upload' ? (
+        <>
+          <div
+            className={`upload-zone ${dragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt"
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+            />
+            <div className="upload-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+            </div>
+            <p className="upload-text">
+              {loading ? 'Processing...' : 'Drag & drop your PDF here, or click to browse'}
+            </p>
+            <p className="upload-hint">
+              Supported formats: PDF, TXT
+            </p>
+            {uploadedFileName && !loading && (
+              <p className="upload-hint" style={{ marginTop: '0.5rem', color: 'var(--success)' }}>
+                Last uploaded: {uploadedFileName}
+              </p>
+            )}
+          </div>
+          <div className="pipeline-controls">
             <a href="/sample_discharge_summary_kfshrc.pdf" download className="btn btn-secondary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
               </svg>
               Download Sample PDF
             </a>
-            <button onClick={loadSampleDocument} disabled={loading} className="btn btn-secondary">
-              Load Sample Text
-            </button>
             <button onClick={processSampleDocument} disabled={loading} className="btn btn-primary">
               Process Sample (KFSHRC)
             </button>
           </div>
-        </div>
-
-        <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="Paste medical record text here, or click 'Download Sample PDF' to get the KFSHRC discharge summary. Then click 'Process Sample' to run the de-identification pipeline..."
-          className="document-input"
-        />
-
-        <div className="input-footer">
-          <div className="word-count">
-            {inputText.length > 0 && (
-              <span>{inputText.split(/\s+/).filter(w => w).length} words, {inputText.length} characters</span>
-            )}
+        </>
+      ) : (
+        <div className="result-card">
+          <div className="input-header">
+            <h3>Input Document</h3>
+            <div className="input-actions">
+              <button onClick={loadSampleDocument} disabled={loading} className="btn btn-secondary">
+                Load Sample Text
+              </button>
+              <button onClick={processSampleDocument} disabled={loading} className="btn btn-primary">
+                Process Sample (KFSHRC)
+              </button>
+            </div>
           </div>
-          <button
-            onClick={processDocument}
-            disabled={loading || !inputText.trim()}
-            className="btn btn-primary"
-          >
-            {loading ? <><span className="loading-spinner"></span> Processing...</> : 'Process Document'}
-          </button>
+
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Paste medical record text here, then click 'Process Document' to run the de-identification pipeline..."
+            className="document-input"
+          />
+
+          <div className="input-footer">
+            <div className="word-count">
+              {inputText.length > 0 && (
+                <span>{inputText.split(/\s+/).filter(w => w).length} words, {inputText.length} characters</span>
+              )}
+            </div>
+            <button
+              onClick={processDocument}
+              disabled={loading || !inputText.trim()}
+              className="btn btn-primary"
+            >
+              {loading ? <><span className="loading-spinner"></span> Processing...</> : 'Process Document'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
         <div className="result-card" style={{ borderLeft: '4px solid var(--danger)' }}>

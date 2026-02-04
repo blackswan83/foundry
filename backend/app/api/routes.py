@@ -1121,3 +1121,50 @@ async def download_sample_medical_record():
             "Content-Disposition": "attachment; filename=sample_discharge_summary_kfshrc.txt"
         }
     )
+
+
+@router.post("/demo/medical-record/upload")
+async def upload_medical_record(file: UploadFile = File(...)):
+    """
+    Upload a medical record document (PDF or TXT) for processing.
+
+    Supported formats:
+    - PDF: Text extracted using PyPDF2, with OCR fallback
+    - TXT: Plain text processed directly
+
+    Returns the full de-identification result including:
+    - Extracted clinical entities
+    - Terminology mappings
+    - PHI detections
+    - De-identified text
+    """
+    # Validate file type
+    filename = file.filename.lower() if file.filename else ""
+    if not filename.endswith('.pdf') and not filename.endswith('.txt'):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Please upload a PDF or TXT file."
+        )
+
+    try:
+        content = await file.read()
+
+        if filename.endswith('.pdf'):
+            result = medical_record_processor.process_pdf(content)
+        else:
+            # TXT file - decode as UTF-8
+            text = content.decode('utf-8')
+            result = medical_record_processor.process_text(text)
+
+        return medical_record_processor.to_json_result(result)
+
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to decode text file. Please ensure it's UTF-8 encoded."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing file: {str(e)}"
+        )
