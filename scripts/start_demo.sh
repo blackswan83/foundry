@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Nuraxi Foundry Demo Startup Script
+# Nuraxi Elembic Demo Startup Script
 # Starts both backend and frontend servers
 
 echo "=================================="
-echo "  Nuraxi Foundry Demo Prototype   "
+echo "  Nuraxi Elembic Demo Prototype   "
 echo "  KFSHRC - January 2026           "
 echo "=================================="
 echo ""

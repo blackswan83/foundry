@@ -11,6 +11,8 @@ export interface PipelineResult {
   overall_status: string;
   message?: string;
   error?: string;
+  unique_patients?: number;
+  source_records?: number;
 }
 
 export interface CohortResult {
@@ -81,7 +83,75 @@ export interface PatientAnalysis {
   };
 }
 
+export interface ExtractionSample {
+  id: string;
+  title: string;
+  type: string;
+  description: string;
+}
+
+export interface ExtractedEntity {
+  text: string;
+  entity_type: string;
+  entity_type_label: string;
+  layer: string;
+  color: string;
+  start: number;
+  end: number;
+  vocabulary: string;
+  code: string;
+  concept: string;
+  semantic_tag: string;
+  confidence: number;
+  negated: boolean;
+  historical: boolean;
+  subject: string;
+  context: string;
+  note: string;
+}
+
+export interface ExtractionOperation {
+  step: number;
+  operation: string;
+  detail: string;
+  count: number;
+}
+
+export interface ExtractionResult {
+  entities: ExtractedEntity[];
+  operations: ExtractionOperation[];
+  entity_types: Record<string, { label: string; layer: string; color: string }>;
+  stats: Record<string, number>;
+  vocabularies_used: string[];
+  disclaimer: string;
+}
+
 export const api = {
+  async getExtractionSamples(): Promise<{ samples: ExtractionSample[] }> {
+    const response = await fetch(`${API_BASE}/demo/extraction/samples`);
+    if (!response.ok) throw new Error('Failed to load samples');
+    return response.json();
+  },
+
+  async getExtractionSample(sampleId: string): Promise<{ sample_id: string; text: string }> {
+    const response = await fetch(`${API_BASE}/demo/extraction/sample/${sampleId}`);
+    if (!response.ok) throw new Error('Failed to load sample');
+    return response.json();
+  },
+
+  async runExtraction(text: string, threshold: number): Promise<ExtractionResult> {
+    const response = await fetch(`${API_BASE}/demo/extraction/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, threshold }),
+    });
+    if (!response.ok) {
+      const t = await response.text();
+      throw new Error(`Extraction failed: ${response.status} - ${t}`);
+    }
+    return response.json();
+  },
+
   async runFullPipeline(numPatients: number = 30): Promise<PipelineResult> {
     const response = await fetch(`${API_BASE}/demo/full-pipeline?num_patients=${numPatients}`, {
       method: 'POST',

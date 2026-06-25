@@ -106,7 +106,7 @@ const Section1_TheProblem = () => (
 );
 
 // Section 2: WHAT IS THE FOUNDRY (Interest)
-const Section2_WhatIsFoundry = () => (
+const Section2_WhatIsElembic = () => (
   <div style={{
     minHeight: '80vh',
     background: colors.white,
@@ -143,7 +143,7 @@ const Section2_WhatIsFoundry = () => (
       textAlign: 'center',
       marginBottom: '20px',
     }}>
-      The <span style={{ fontWeight: '600' }}>Foundry</span>
+      <span style={{ fontWeight: '600' }}>Elembic</span>
     </h2>
 
     <p style={{
@@ -191,7 +191,7 @@ const Section2_WhatIsFoundry = () => (
         </div>
       </div>
 
-      {/* Arrow with Foundry */}
+      {/* Arrow with Elembic */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{
           background: colors.primary,
@@ -202,7 +202,7 @@ const Section2_WhatIsFoundry = () => (
           fontWeight: '500',
           marginBottom: '8px',
         }}>
-          The Foundry
+          Elembic
         </div>
         <span style={{ fontSize: '24px', color: colors.primary }}>→</span>
       </div>
@@ -274,7 +274,7 @@ const Section3_HowItWorks = () => (
       color: colors.primary,
       marginBottom: '40px',
     }}>
-      How <span style={{ fontWeight: '600' }}>The Foundry</span> Works
+      How <span style={{ fontWeight: '600' }}>Elembic</span> Works
     </h2>
 
     <div style={{
@@ -286,11 +286,12 @@ const Section3_HowItWorks = () => (
       justifyContent: 'center',
     }}>
       {[
-        { icon: '📥', title: '1. Ingest', desc: 'Connect to EHRs, Labs, Clinical Notes, FHIR feeds' },
+        { icon: '📝', title: '1. Extract', desc: 'NLP + SNOMED annotation of unstructured clinical text' },
         { icon: '🔒', title: '2. De-identify', desc: 'PDPL-compliant removal of all personal identifiers' },
         { icon: '🔗', title: '3. Tokenize', desc: 'Anonymous linkage across multiple data sources' },
         { icon: '🏷️', title: '4. Encode', desc: 'Medical coding: ICD-10, SNOMED-CT, LOINC, RxNorm' },
-        { icon: '✓', title: '5. OMOP Output', desc: 'Structured, queryable, AI-ready data', isLast: true },
+        { icon: '🧩', title: '5. OMOP', desc: 'Standardize to OMOP Common Data Model v5.4' },
+        { icon: '✓', title: '6. Analyze', desc: 'Cohort queries, AI insights, research-ready output', isLast: true },
       ].map((step, i) => (
         <React.Fragment key={i}>
           <div style={{
@@ -317,7 +318,7 @@ const Section3_HowItWorks = () => (
               {step.desc}
             </div>
           </div>
-          {i < 4 && <div style={{ paddingTop: '30px', color: colors.primary, fontSize: '20px' }}>→</div>}
+          {i < 5 && <div style={{ paddingTop: '30px', color: colors.primary, fontSize: '20px' }}>→</div>}
         </React.Fragment>
       ))}
     </div>
@@ -560,7 +561,7 @@ const Section6_ClinicalIntelligence = () => (
       maxWidth: '600px',
       marginBottom: '40px',
     }}>
-      The Foundry unlocks AI and agentic power for immediate clinical and commercial impact
+      Elembic unlocks AI and agentic power for immediate clinical and commercial impact
     </p>
 
     <div style={{
@@ -689,7 +690,7 @@ const Section7_TryDemo = ({ onStartDemo }: Section7Props) => (
       marginBottom: '16px',
       textAlign: 'center',
     }}>
-      See The <span style={{ fontWeight: '600' }}>Foundry</span> in Action
+      See <span style={{ fontWeight: '600' }}>Elembic</span> in Action
     </h2>
 
     <p style={{
@@ -737,15 +738,15 @@ const Section7_TryDemo = ({ onStartDemo }: Section7Props) => (
 );
 
 // Main Landing Component
-interface FoundryLandingProps {
+interface ElembicLandingProps {
   onStartDemo: () => void;
 }
 
-export default function FoundryLanding({ onStartDemo }: FoundryLandingProps) {
+export default function ElembicLanding({ onStartDemo }: ElembicLandingProps) {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       <Section1_TheProblem />
-      <Section2_WhatIsFoundry />
+      <Section2_WhatIsElembic />
       <Section3_HowItWorks />
       <Section4_CorePillars />
       <Section5_Outcomes />

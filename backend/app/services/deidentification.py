@@ -204,11 +204,12 @@ class DeidentificationService:
             deidentified["age_group"] = "90+"
             log_entry["actions"].append("generalized_age_over_89")
         else:
+            # Strict Safe Harbor reading: retain year only. Month and day of birth
+            # are dropped to minimise re-identification risk; the (non-90+) age is
+            # kept because it is derivable from the year and is research-relevant.
             deidentified["year_of_birth"] = shifted_dob.year
-            deidentified["month_of_birth"] = shifted_dob.month
-            # Day removed for Safe Harbor compliance
             deidentified["age_at_data_collection"] = age
-            log_entry["actions"].append("shifted_dates")
+            log_entry["actions"].append("shifted_dates_year_only")
 
         # GENDER: Keep (not PHI)
         deidentified["gender"] = patient.gender.value
@@ -423,9 +424,13 @@ class DeidentificationService:
         """
         Demonstrate the de-identification process with before/after comparison.
         """
-        # Original data (PHI)
+        # Original data (PHI). Join name parts without leaving a double space
+        # when the middle name is absent.
+        full_name = " ".join(
+            part for part in [patient.first_name, patient.middle_name, patient.last_name] if part
+        )
         original = {
-            "name": f"{patient.first_name} {patient.middle_name or ''} {patient.last_name}".strip(),
+            "name": full_name,
             "national_id": patient.national_id,
             "date_of_birth": patient.date_of_birth.isoformat(),
             "phone": patient.phone_number,
@@ -437,29 +442,41 @@ class DeidentificationService:
         # De-identified data
         deidentified = self.deidentify_patient(patient, token)
 
+        # Enumerate exactly the direct identifiers removed/transformed for THIS
+        # record. The count the UI shows is derived from this list, so the number
+        # and the enumeration always match (the "18" PDPL figure is the number of
+        # identifier *categories* the method addresses, surfaced separately).
+        phi_removed = [
+            "Full name (first, middle, last)",
+            "National ID (Iqama)",
+            "Exact date of birth (month + day)",
+            "Phone number",
+        ]
+        if patient.email:
+            phi_removed.append("Email address")
+        phi_removed.extend([
+            "Street address",
+            "City",
+            "Postal code",
+            "Medical record number (MRN)",
+        ])
+
         return {
             "original_phi": original,
             "deidentified": deidentified,
-            "phi_removed": [
-                "Full name",
-                "National ID",
-                "Exact date of birth",
-                "Phone number",
-                "Email address",
-                "Street address",
-                "City",
-                "Medical record number",
-            ],
+            "phi_removed": phi_removed,
+            "identifiers_removed_count": len(phi_removed),
             "phi_transformed": [
-                "DOB -> Year of birth (shifted)",
+                "Date of birth -> Year of birth only (date-shifted)",
                 "Name -> Surrogate ID",
-                "All IDs -> Anonymous token",
-                "Region -> Generalized location",
+                "All source IDs -> Anonymous linkage token",
+                "City/address -> Region only (generalized)",
             ],
             "data_preserved": [
                 "Gender",
-                "Age group",
+                "Year of birth + age (not 90+)",
                 "Region (generalized)",
-                "All clinical data",
+                "All clinical data (diagnoses, labs, medications, vitals)",
             ],
+            "pdpl_identifier_categories_addressed": len(self.PDPL_SENSITIVE_DATA_IDENTIFIERS),
         }

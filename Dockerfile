@@ -1,4 +1,4 @@
-# Nuraxi Foundry Demo - Railway Deployment
+# Nuraxi Elembic Demo - Railway Deployment
 FROM python:3.11-slim
 
 WORKDIR /app

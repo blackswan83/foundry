@@ -1,26 +1,31 @@
 import { useState, useRef } from 'react';
 import { api, PipelineResult, CohortResult, PatientAnalysis, PatientInfo } from './services/api';
-import FoundryLanding from './components/FoundryLanding';
+import ElembicLanding from './components/ElembicLanding';
 import MedicalRecordProcessor from './components/MedicalRecordProcessor';
+import ClinicalTextExtraction from './components/ClinicalTextExtraction';
 
-type TabType = 'home' | 'pipeline' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality' | 'medical-record';
+type TabType = 'home' | 'pipeline' | 'extraction' | 'linkage' | 'deidentification' | 'omop' | 'cohort' | 'ai' | 'executive' | 'quality' | 'medical-record';
 type PipelineMode = 'demo' | 'upload';
 
 const PIPELINE_STEPS = [
-  { num: 1, title: 'Data Generation', desc: 'Generating synthetic Saudi patient data across hospital systems' },
-  { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
-  { num: 3, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
-  { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
-  { num: 5, title: 'Analytics Ready', desc: 'Enabling cohort queries and AI insights' },
+  { num: 1, title: 'Clinical Text Extraction', desc: 'NLP + SNOMED annotation of unstructured clinical notes' },
+  { num: 2, title: 'Data Generation', desc: 'Generating synthetic Saudi patient data across hospital systems' },
+  { num: 3, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
+  { num: 4, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
+  { num: 5, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
+  { num: 6, title: 'Cohort & Analytics', desc: 'Enabling cohort queries and AI insights' },
 ];
 
 const UPLOAD_STEPS = [
-  { num: 1, title: 'CSV Parsing', desc: 'Reading and validating uploaded patient records' },
-  { num: 2, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
-  { num: 3, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
-  { num: 4, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
-  { num: 5, title: 'Ready to Download', desc: 'Anonymized data ready for export' },
+  { num: 1, title: 'Clinical Text Extraction', desc: 'NLP + SNOMED annotation of any clinical-note column' },
+  { num: 2, title: 'CSV Parsing', desc: 'Reading and validating uploaded patient records' },
+  { num: 3, title: 'Patient Linkage', desc: 'Tokenizing records for cross-system patient linkage' },
+  { num: 4, title: 'De-identification', desc: 'Applying PDPL + HiPS compliant data anonymization' },
+  { num: 5, title: 'OMOP Transformation', desc: 'Converting to OMOP CDM v5.4 standardized format' },
+  { num: 6, title: 'Ready to Download', desc: 'Anonymized data ready for export' },
 ];
+
+const PIPELINE_STEP_COUNT = 6;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -65,7 +70,7 @@ function App() {
       const apiPromise = api.runFullPipeline(30);
 
       // Animate through steps with delays
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= PIPELINE_STEP_COUNT; i++) {
         setCurrentStep(i);
         await sleep(500 + Math.random() * 400); // 500-900ms per step
         setCompletedSteps(prev => [...prev, i]);
@@ -181,7 +186,7 @@ function App() {
 
     try {
       // Animate through steps
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= PIPELINE_STEP_COUNT; i++) {
         setCurrentStep(i);
         await sleep(400 + Math.random() * 300);
         setCompletedSteps(prev => [...prev, i]);
@@ -447,7 +452,7 @@ function App() {
           </h3>
           <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             {pipelineMode === 'demo'
-              ? 'Demo Mode: Processing 30 synthetic patients from multiple Saudi healthcare institutes'
+              ? `Demo Mode: ${pipelineResult?.unique_patients ?? 30} unique synthetic patients (${pipelineResult?.source_records ?? 57} source records across 4 hospital systems, linked to ${pipelineResult?.unique_patients ?? 30} individuals)`
               : uploadResult
                 ? `Upload Mode: Processed ${uploadResult.parsing.valid_rows} patient records from your CSV`
                 : 'Upload Mode: Upload a CSV to process your patient data'
@@ -455,110 +460,35 @@ function App() {
           </p>
 
           <div style={{ display: 'grid', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                flexShrink: 0
-              }}>1</span>
-              <div>
-                <strong>Data Generation / CSV Parsing</strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
-                  Creates realistic patient records with Saudi demographics, encounters, and diagnoses
-                </p>
+            {[
+              { n: 1, title: 'Clinical Text Extraction & SNOMED Annotation', desc: 'NLP recognizes entities in unstructured clinical notes and links them to SNOMED CT (clinical layer) and HGNC / HGVS / ClinVar / LOINC (molecular layer), with a full operations/audit log.' },
+              { n: 2, title: 'Data Generation / CSV Parsing', desc: 'Creates (or ingests) realistic patient records with Saudi demographics, encounters, and diagnoses.' },
+              { n: 3, title: 'Patient Linkage', desc: 'Generates anonymous tokens from National ID using secure hashing (HMAC-SHA256) to link records across hospitals without exposing identity.' },
+              { n: 4, title: 'De-identification (PDPL + HiPS)', desc: 'Removes direct identifiers spanning the 18 PDPL personal-data categories and substitutes realistic surrogate values to preserve research utility.' },
+              { n: 5, title: 'OMOP Transformation', desc: 'Standardizes clinical codes for global interoperability: ICD-10 → SNOMED, Labs → LOINC, Medications → RxNorm.' },
+              { n: 6, title: 'Cohort & Analytics', desc: 'De-identified, standardized data ready for research cohort queries and AI-powered clinical insights.' },
+            ].map(step => (
+              <div key={step.n} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <span style={{
+                  background: 'var(--primary)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.8rem',
+                  flexShrink: 0
+                }}>{step.n}</span>
+                <div>
+                  <strong>{step.title}</strong>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
+                    {step.desc}
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                flexShrink: 0
-              }}>2</span>
-              <div>
-                <strong>Patient Linkage</strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
-                  Generates anonymous tokens from National ID using secure hashing (HMAC-SHA256) to link records across different hospitals without exposing identity
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                flexShrink: 0
-              }}>3</span>
-              <div>
-                <strong>De-identification (PDPL + HiPS)</strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
-                  Removes 18 sensitive identifiers (names, National ID, phone, etc.) per Saudi PDPL requirements. Uses realistic surrogate data to maintain utility.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                flexShrink: 0
-              }}>4</span>
-              <div>
-                <strong>OMOP Transformation</strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
-                  Standardizes clinical codes for global interoperability: ICD-10 to SNOMED, Labs to LOINC, Medications to RxNorm
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-              <span style={{
-                background: 'var(--primary)',
-                color: 'white',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                flexShrink: 0
-              }}>5</span>
-              <div>
-                <strong>Analytics Ready</strong>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0' }}>
-                  De-identified, standardized data ready for research cohort queries and AI-powered clinical insights
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -629,7 +559,9 @@ function App() {
       <h2>De-identification (PDPL + HiPS)</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
         Shows PDPL-compliant de-identification with realistic surrogate data using the HiPS methodology.
-        Compliant with Saudi Personal Data Protection Law enforced by SDAIA.
+        Compliant with Saudi Personal Data Protection Law enforced by SDAIA. Dates of birth are reduced to
+        <strong> year only</strong> (month and day dropped) per a strict Safe Harbor reading to minimise
+        re-identification risk; clinical event dates are consistently date-shifted per patient.
       </p>
 
       {deidDemo ? (
@@ -660,18 +592,28 @@ function App() {
             <h3>Transformation Summary</h3>
             <div className="stats-grid">
               <div className="stat-item">
-                <div className="value" style={{ fontSize: '1.5rem' }}>18</div>
-                <div className="label">Identifiers Removed</div>
+                <div className="value" style={{ fontSize: '1.5rem' }}>
+                  {((deidDemo as { before_after?: { identifiers_removed_count?: number } }).before_after?.identifiers_removed_count)
+                    ?? ((deidDemo as { before_after?: { phi_removed?: string[] } }).before_after?.phi_removed?.length)
+                    ?? 0}
+                </div>
+                <div className="label">Direct Identifiers Removed (this record)</div>
+              </div>
+              <div className="stat-item">
+                <div className="value" style={{ fontSize: '1.5rem' }}>
+                  {((deidDemo as { before_after?: { pdpl_identifier_categories_addressed?: number } }).before_after?.pdpl_identifier_categories_addressed) ?? 18}
+                </div>
+                <div className="label">PDPL Identifier Categories Addressed</div>
               </div>
               <div className="stat-item">
                 <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
-                <div className="label">PDPL Compliant</div>
-              </div>
-              <div className="stat-item">
-                <div className="value" style={{ color: 'var(--success)' }}>Yes</div>
-                <div className="label">Research Utility</div>
+                <div className="label">Research Utility Preserved</div>
               </div>
             </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.75rem' }}>
+              The count above matches the enumerated <strong>PHI Removed</strong> list below. The method addresses 18
+              PDPL personal-data identifier categories; only those present in this record are removed and shown.
+            </p>
           </div>
 
           <div className="demo-grid">
@@ -999,16 +941,16 @@ function App() {
             <h3>Platform Overview</h3>
             <div className="stats-grid">
               <div className="stat-item">
-                <div className="value">{(executiveSummary as any).overview?.total_patients_processed || 0}</div>
-                <div className="label">Patients Processed</div>
+                <div className="value">{(executiveSummary as any).overview?.unique_patients || 0}</div>
+                <div className="label">Unique Patients</div>
               </div>
               <div className="stat-item">
-                <div className="value">{(executiveSummary as any).overview?.unique_individuals_identified || 0}</div>
-                <div className="label">Unique Individuals</div>
+                <div className="value">{(executiveSummary as any).overview?.source_records_ingested || 0}</div>
+                <div className="label">Source Records</div>
               </div>
               <div className="stat-item">
-                <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).overview?.cross_system_linkage_rate || 'N/A'}</div>
-                <div className="label">Linkage Rate</div>
+                <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).overview?.duplicate_records_linked || 0}</div>
+                <div className="label">Records Linked</div>
               </div>
               <div className="stat-item">
                 <div className="value" style={{ color: 'var(--success)' }}>{(executiveSummary as any).overview?.deidentification_completeness || 'N/A'}</div>
@@ -1193,9 +1135,9 @@ function App() {
         <div className="logo">
           <img src="/nuraxi-logo.svg" alt="Nuraxi" className="nuraxi-logo" />
         </div>
-        <p className="subtitle">foundry</p>
+        <p className="subtitle">elembic</p>
         <p className="version">Clinical Data Intelligence Platform</p>
-        <span className="tag">Demo v1.0</span>
+        <span className="tag">Demo v1.1</span>
       </header>
 
       <div className="tabs">
@@ -1210,6 +1152,9 @@ function App() {
           <>
             <button className={`tab demo-tab ${activeTab === 'pipeline' ? 'active' : ''}`} onClick={() => setActiveTab('pipeline')}>
               Pipeline
+            </button>
+            <button className={`tab demo-tab ${activeTab === 'extraction' ? 'active' : ''}`} onClick={() => setActiveTab('extraction')}>
+              Text Extraction
             </button>
             <button className={`tab demo-tab ${activeTab === 'linkage' ? 'active' : ''}`} onClick={() => setActiveTab('linkage')}>
               Patient Linkage
@@ -1239,8 +1184,9 @@ function App() {
         )}
       </div>
 
-      {activeTab === 'home' && <FoundryLanding onStartDemo={() => setActiveTab('pipeline')} />}
+      {activeTab === 'home' && <ElembicLanding onStartDemo={() => setActiveTab('pipeline')} />}
       {activeTab === 'pipeline' && renderPipelineTab()}
+      {activeTab === 'extraction' && <ClinicalTextExtraction />}
       {activeTab === 'linkage' && renderLinkageTab()}
       {activeTab === 'deidentification' && renderDeidentificationTab()}
       {activeTab === 'omop' && renderOMOPTab()}

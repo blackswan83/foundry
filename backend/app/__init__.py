@@ -1,3 +1,3 @@
-# Nuraxi Foundry Demo Prototype
+# Nuraxi Elembic Demo Prototype
 # King Faisal Specialist Hospital & Research Centre
-# Version 1.0 - January 2026
+# Version 1.1 - June 2026

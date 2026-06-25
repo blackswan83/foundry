@@ -1,7 +1,7 @@
 {
-  "name": "nuraxi-foundry-demo",
-  "version": "1.0.0",
-  "description": "Nuraxi Foundry Demo Prototype - KFSHRC",
+  "name": "nuraxi-elembic-demo",
+  "version": "1.1.0",
+  "description": "Nuraxi Elembic Demo Prototype - KFSHRC",
   "private": true,
   "scripts": {
     "dev": "vite",
