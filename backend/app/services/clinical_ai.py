@@ -114,6 +114,159 @@ class ClinicalAIAgent:
         },
     }
 
+    # Minimum number of distinct measurements required before we are willing to
+    # call something a "trend". Two points is a line, not a trend.
+    MIN_TREND_SERIES_LENGTH = 3
+
+    # LOINC code -> human-readable lab name. Measurements carry the LOINC code in
+    # measurement_source_value, so insights can render "Creatinine (2160-0)"
+    # instead of a bare code.
+    LOINC_NAMES = {
+        "718-7": "Hemoglobin",
+        "6690-2": "White blood cell count",
+        "777-3": "Platelet count",
+        "2160-0": "Creatinine",
+        "3094-0": "Blood urea nitrogen",
+        "2345-7": "Glucose",
+        "4548-4": "HbA1c",
+        "2951-2": "Sodium",
+        "2823-3": "Potassium",
+        "1742-6": "ALT",
+        "1920-8": "AST",
+        "1975-2": "Bilirubin (total)",
+        "1751-7": "Albumin",
+        "5902-2": "Prothrombin time",
+        "6301-6": "INR",
+    }
+
+    # Finding-specific follow-up tied to which lab is moving and in which
+    # direction, so recommendations are not a single templated pair.
+    TREND_RECOMMENDATIONS = {
+        ("creatinine", "rising"): [
+            "Assess renal function — calculate/trend eGFR",
+            "Review nephrotoxic agents and contrast exposure",
+            "Consider nephrology referral if progressive",
+        ],
+        ("creatinine", "declining"): [
+            "Confirm recovering renal function and adequate hydration",
+            "Re-evaluate renally-cleared drug dosing",
+        ],
+        ("hemoglobin", "declining"): [
+            "Evaluate for occult blood loss or hemolysis",
+            "Check iron studies and reticulocyte count",
+            "Assess transfusion need if symptomatic or <7 g/dL",
+        ],
+        ("hemoglobin", "rising"): [
+            "Reassess hydration/volume status",
+            "Consider polycythemia work-up if persistently elevated",
+        ],
+        ("white blood cell count", "rising"): [
+            "Evaluate for infection or inflammatory process",
+            "Correlate with cultures, fever curve and clinical exam",
+        ],
+        ("white blood cell count", "declining"): [
+            "Assess for marrow suppression or drug effect",
+            "Monitor CBC closely; review myelosuppressive medications",
+        ],
+        ("glucose", "rising"): [
+            "Review glycemic control and adjust diabetes therapy",
+            "Obtain HbA1c to assess longer-term control",
+        ],
+        ("glucose", "declining"): [
+            "Assess for over-treatment / hypoglycemia risk",
+            "Review insulin and oral hypoglycemic dosing",
+        ],
+        ("potassium", "rising"): [
+            "Review potassium-retaining drugs (ACEi/ARB, K-sparing diuretics)",
+            "Obtain ECG if markedly elevated",
+        ],
+        ("potassium", "declining"): [
+            "Evaluate for GI/renal losses; consider repletion",
+        ],
+        ("platelet count", "declining"): [
+            "Work up thrombocytopenia (drug-induced, consumptive, marrow)",
+            "Hold agents affecting platelets where appropriate",
+        ],
+        ("hba1c", "rising"): [
+            "Intensify diabetes management plan",
+            "Reinforce lifestyle modification and adherence",
+        ],
+    }
+
+    # Finding-specific actions for critically abnormal single values, keyed by
+    # (lab key, "low"|"high"). Falls back to a sensible, still lab-named action.
+    CRITICAL_VALUE_ACTIONS = {
+        ("hemoglobin", "low"): [
+            "Assess for active bleeding; type & screen",
+            "Check iron studies; transfuse per protocol if symptomatic",
+        ],
+        ("potassium", "high"): [
+            "Obtain stat ECG; institute hyperkalemia protocol if changes",
+            "Hold ACEi/ARB and potassium-sparing agents",
+        ],
+        ("potassium", "low"): [
+            "Replete potassium; check magnesium concurrently",
+            "Review diuretic therapy",
+        ],
+        ("sodium", "high"): [
+            "Assess free-water deficit and volume status",
+            "Correct hypernatremia at a safe rate",
+        ],
+        ("sodium", "low"): [
+            "Determine volume status and serum osmolality",
+            "Correct sodium slowly to avoid osmotic demyelination",
+        ],
+        ("glucose", "high"): [
+            "Check ketones/anion gap; treat hyperglycemia",
+            "Review insulin regimen and triggers",
+        ],
+        ("glucose", "low"): [
+            "Treat hypoglycemia immediately (oral/IV glucose)",
+            "Identify and remove the precipitating cause",
+        ],
+        ("creatinine", "high"): [
+            "Work up acute kidney injury (pre/intra/post-renal)",
+            "Hold nephrotoxins; renally dose medications",
+        ],
+        ("platelets", "low"): [
+            "Assess bleeding risk and hold anticoagulation if needed",
+            "Work up thrombocytopenia; consider hematology input",
+        ],
+    }
+
+    def _critical_recommendations(self, lab_name: str, direction: str) -> List[str]:
+        """Finding-specific actions for a critically abnormal single value."""
+        specific = self.CRITICAL_VALUE_ACTIONS.get((lab_name.lower(), direction))
+        base = ["Confirm with a repeat measurement before acting"]
+        if specific:
+            return specific + base
+        adjective = "high" if direction == "high" else "low"
+        return [
+            f"Urgent clinical review of the critically {adjective} {lab_name}",
+            f"Evaluate the likely cause of the abnormal {lab_name}",
+        ] + base
+
+    def _lab_display(self, source_value: str) -> str:
+        """Render a measurement source value as 'Name (CODE)' where the code is
+        a known LOINC code, otherwise return the raw value."""
+        name = self.LOINC_NAMES.get(str(source_value))
+        if name:
+            return f"{name} ({source_value})"
+        return str(source_value)
+
+    def _trend_recommendations(self, source_value: str, direction: str) -> List[str]:
+        """Finding-specific recommendations for a lab moving in a direction."""
+        name = self.LOINC_NAMES.get(str(source_value), str(source_value)).lower()
+        specific = self.TREND_RECOMMENDATIONS.get((name, direction))
+        if specific:
+            return specific
+        readable = self.LOINC_NAMES.get(str(source_value), str(source_value))
+        verb = "increase" if direction == "rising" else "decrease"
+        return [
+            f"Correlate the {verb} in {readable} with the patient's clinical course",
+            f"Repeat {readable} to confirm the trend before acting",
+        ]
+
     def __init__(self):
         self._insights: List[ClinicalInsight] = []
         self._analysis_log: List[Dict] = []
@@ -208,11 +361,7 @@ class ClinicalAIAgent:
                         title=f"Critical Low {lab_name.title()}",
                         description=f"{lab_name.title()} value of {value} {critical_range.get('unit', '')} is critically low (threshold: {critical_range['low']})",
                         evidence=[f"Lab result: {value} {critical_range.get('unit', '')}"],
-                        recommendations=[
-                            "Immediate clinical review recommended",
-                            "Consider repeat testing to confirm",
-                            "Evaluate for underlying cause",
-                        ],
+                        recommendations=self._critical_recommendations(lab_name, "low"),
                         relevant_concepts=[lab.get("measurement_concept_id", 0)],
                     ))
 
@@ -223,41 +372,51 @@ class ClinicalAIAgent:
                         title=f"Critical High {lab_name.title()}",
                         description=f"{lab_name.title()} value of {value} {critical_range.get('unit', '')} is critically high (threshold: {critical_range['high']})",
                         evidence=[f"Lab result: {value} {critical_range.get('unit', '')}"],
-                        recommendations=[
-                            "Immediate clinical review recommended",
-                            "Consider repeat testing to confirm",
-                            "Initiate appropriate treatment protocol",
-                        ],
+                        recommendations=self._critical_recommendations(lab_name, "high"),
                         relevant_concepts=[lab.get("measurement_concept_id", 0)],
                     ))
 
-        # Check for trends (simplified)
+        # Check for trends. We only call something a trend once there are at
+        # least MIN_TREND_SERIES_LENGTH measurements in the series — two points
+        # is a line, not a trend — and we render the lab name, not a bare LOINC
+        # code, with recommendations tied to the specific finding.
         for source, labs in lab_groups.items():
-            if len(labs) >= 2:
-                sorted_labs = sorted(labs, key=lambda x: x.get("measurement_datetime", ""))
-                values = [l.get("value_as_number") for l in sorted_labs if l.get("value_as_number")]
+            sorted_labs = sorted(labs, key=lambda x: x.get("measurement_datetime", ""))
+            values = [l.get("value_as_number") for l in sorted_labs if l.get("value_as_number") is not None]
 
-                if len(values) >= 2:
-                    if all(values[i] < values[i+1] for i in range(len(values)-1)):
-                        insights.append(ClinicalInsight(
-                            insight_type=InsightType.OBSERVATION,
-                            severity=Severity.MEDIUM,
-                            title=f"Rising Trend: {source}",
-                            description=f"Consistent upward trend observed in {source} values over {len(values)} measurements",
-                            evidence=[f"Values: {values}"],
-                            recommendations=["Monitor trend", "Consider clinical correlation"],
-                            relevant_concepts=[],
-                        ))
-                    elif all(values[i] > values[i+1] for i in range(len(values)-1)):
-                        insights.append(ClinicalInsight(
-                            insight_type=InsightType.OBSERVATION,
-                            severity=Severity.MEDIUM,
-                            title=f"Declining Trend: {source}",
-                            description=f"Consistent downward trend observed in {source} values over {len(values)} measurements",
-                            evidence=[f"Values: {values}"],
-                            recommendations=["Monitor trend", "Consider clinical correlation"],
-                            relevant_concepts=[],
-                        ))
+            if len(values) < self.MIN_TREND_SERIES_LENGTH:
+                continue
+
+            display = self._lab_display(source)
+            unit = next((l.get("unit_source_value") for l in sorted_labs if l.get("unit_source_value")), "")
+            rounded = [round(v, 2) for v in values]
+
+            if all(values[i] < values[i + 1] for i in range(len(values) - 1)):
+                insights.append(ClinicalInsight(
+                    insight_type=InsightType.OBSERVATION,
+                    severity=Severity.MEDIUM,
+                    title=f"Rising Trend: {display}",
+                    description=(
+                        f"Monotonic upward trend in {display} across {len(values)} serial measurements "
+                        f"({rounded[0]} → {rounded[-1]} {unit})".strip()
+                    ),
+                    evidence=[f"Serial values ({len(values)} measurements): {rounded} {unit}".strip()],
+                    recommendations=self._trend_recommendations(source, "rising"),
+                    relevant_concepts=[],
+                ))
+            elif all(values[i] > values[i + 1] for i in range(len(values) - 1)):
+                insights.append(ClinicalInsight(
+                    insight_type=InsightType.OBSERVATION,
+                    severity=Severity.MEDIUM,
+                    title=f"Declining Trend: {display}",
+                    description=(
+                        f"Monotonic downward trend in {display} across {len(values)} serial measurements "
+                        f"({rounded[0]} → {rounded[-1]} {unit})".strip()
+                    ),
+                    evidence=[f"Serial values ({len(values)} measurements): {rounded} {unit}".strip()],
+                    recommendations=self._trend_recommendations(source, "declining"),
+                    relevant_concepts=[],
+                ))
 
         return insights
 

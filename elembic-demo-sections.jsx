@@ -111,9 +111,9 @@ const Section1_TheProblem = () => (
 );
 
 // ============================================
-// SECTION 2: INTEREST - What is The Foundry
+// SECTION 2: INTEREST - What is The Elembic
 // ============================================
-const Section2_WhatIsFoundry = () => (
+const Section2_WhatIsElembic = () => (
   <div style={{
     minHeight: '100vh',
     background: colors.white,
@@ -153,7 +153,7 @@ const Section2_WhatIsFoundry = () => (
       textAlign: 'center',
       marginBottom: '20px',
     }}>
-      The <span style={{ fontWeight: '600' }}>Foundry</span>
+      The <span style={{ fontWeight: '600' }}>Elembic</span>
     </h1>
     
     <p style={{
@@ -200,7 +200,7 @@ const Section2_WhatIsFoundry = () => (
         </div>
       </div>
       
-      {/* Arrow with Foundry */}
+      {/* Arrow with Elembic */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{
           background: colors.primary,
@@ -211,7 +211,7 @@ const Section2_WhatIsFoundry = () => (
           fontWeight: '500',
           marginBottom: '8px',
         }}>
-          The Foundry
+          The Elembic
         </div>
         <svg width="100" height="20" viewBox="0 0 100 20">
           <path d="M0 10 H80 L70 5 M80 10 L70 15" stroke={colors.primary} strokeWidth="2" fill="none"/>
@@ -289,7 +289,7 @@ const Section3_HowItWorks = () => (
       color: colors.primary,
       marginBottom: '50px',
     }}>
-      How <span style={{ fontWeight: '600' }}>The Foundry</span> Works
+      How <span style={{ fontWeight: '600' }}>The Elembic</span> Works
     </h2>
     
     {/* Process Flow Diagram */}
@@ -849,7 +849,7 @@ const Section6_ClinicalIntelligence = () => (
       maxWidth: '600px',
       marginBottom: '50px',
     }}>
-      The Foundry unlocks AI and agentic power for immediate clinical and commercial impact
+      The Elembic unlocks AI and agentic power for immediate clinical and commercial impact
     </p>
     
     {/* Two Cards Side by Side */}
@@ -1053,11 +1053,11 @@ const Section7_ResearchEnclave = () => (
 // ============================================
 // FULL DEMO COMPONENT
 // ============================================
-export default function FoundryDemoSections() {
+export default function ElembicDemoSections() {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}>
       <Section1_TheProblem />
-      <Section2_WhatIsFoundry />
+      <Section2_WhatIsElembic />
       <Section3_HowItWorks />
       <Section4_CorePillars />
       <Section5_Outcomes />

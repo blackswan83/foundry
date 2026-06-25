@@ -1,5 +1,5 @@
 """
-Nuraxi Foundry Demo Prototype
+Nuraxi Elembic Demo Prototype
 King Faisal Specialist Hospital & Research Centre
 Version 1.0 - January 2026
 
@@ -17,11 +17,11 @@ from fastapi.responses import FileResponse
 from .api import router
 
 app = FastAPI(
-    title="Nuraxi Foundry Demo",
+    title="Nuraxi Elembic Demo",
     description="""
-## Nuraxi Foundry Demo Prototype
+## Nuraxi Elembic Demo Prototype
 
-Interactive demonstration of the Nuraxi Foundry platform capabilities for
+Interactive demonstration of the Nuraxi Elembic platform capabilities for
 King Faisal Specialist Hospital & Research Centre (KFSHRC).
 
 ### Demo Objectives
@@ -52,7 +52,7 @@ King Faisal Specialist Hospital & Research Centre (KFSHRC).
 
 Or run the full pipeline: `POST /api/demo/full-pipeline`
     """,
-    version="1.0.0",
+    version="1.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -82,7 +82,7 @@ FRONTEND_DIR = next((p for p in _possible_paths if p.exists()), _possible_paths[
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "service": "nuraxi-foundry-demo"}
+    return {"status": "healthy", "service": "nuraxi-elembic-demo"}
 
 
 # Serve frontend static files if they exist
@@ -114,8 +114,8 @@ else:
     async def root():
         """Root endpoint with demo information."""
         return {
-            "name": "Nuraxi Foundry Demo Prototype",
-            "version": "1.0.0",
+            "name": "Nuraxi Elembic Demo Prototype",
+            "version": "1.1.0",
             "organization": "King Faisal Specialist Hospital & Research Centre",
             "description": "Interactive demo showcasing clinical data transformation capabilities",
             "api_docs": "/api/docs",

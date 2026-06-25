@@ -383,9 +383,17 @@ class OMOPTransformer:
             "drug_exposure": [],
         }
 
-        # Transform patients to persons
+        # Transform patients to persons.
+        # Multi-system patients arrive as several source records that share one
+        # anonymous token (same individual). They collapse to a single OMOP
+        # person_id, so we emit each person row exactly once to keep the PERSON
+        # table at the unique-individual count (single source of truth for N).
+        seen_person_ids = set()
         for patient in deidentified_data.get("patients", []):
             person = self.transform_patient_to_person(patient)
+            if person.person_id in seen_person_ids:
+                continue
+            seen_person_ids.add(person.person_id)
             omop_data["person"].append(person.model_dump())
 
         # Transform encounters to visits and conditions

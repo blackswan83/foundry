@@ -1216,3 +1216,189 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ========================================
+   Clinical Text Extraction tab
+   ======================================== */
+
+.extraction-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(233, 196, 106, 0.15);
+  border: 1px solid rgba(233, 196, 106, 0.5);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.extraction-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.extraction-controls .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.extraction-controls label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.extraction-controls .threshold-group {
+  min-width: 220px;
+}
+
+.extraction-controls input[type='range'] {
+  width: 100%;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.extraction-stats {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.extraction-panels {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1.3fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .extraction-panels { grid-template-columns: 1fr; }
+  .extraction-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+.extraction-panels .panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
+.extraction-input {
+  flex: 1;
+  min-height: 260px;
+  height: auto;
+}
+
+.panel-foot {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.annotated-text {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 10px;
+  padding: 0.9rem;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 0.74rem;
+  line-height: 1.95;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 420px;
+  color: var(--text-primary);
+}
+
+.annotated-text.muted, .muted { color: var(--text-muted); }
+
+/* Inline entity highlights + legend chips */
+.ent {
+  border-radius: 3px;
+  padding: 0 3px;
+  border: 1px solid;
+  cursor: help;
+}
+
+.ent-condition { background: rgba(192, 57, 43, 0.14); color: #c0392b; border-color: rgba(192, 57, 43, 0.4); }
+.ent-morphology { background: rgba(211, 84, 0, 0.14); color: #d35400; border-color: rgba(211, 84, 0, 0.4); }
+.ent-procedure { background: rgba(39, 174, 96, 0.14); color: #1e8449; border-color: rgba(39, 174, 96, 0.4); }
+.ent-medication { background: rgba(41, 128, 185, 0.14); color: #2471a3; border-color: rgba(41, 128, 185, 0.4); }
+.ent-lab { background: rgba(142, 68, 173, 0.14); color: #8e44ad; border-color: rgba(142, 68, 173, 0.4); }
+.ent-anatomy { background: rgba(22, 160, 133, 0.14); color: #117a65; border-color: rgba(22, 160, 133, 0.4); }
+.ent-gene { background: rgba(183, 149, 11, 0.18); color: #9a7d0a; border-color: rgba(183, 149, 11, 0.5); }
+.ent-variant { background: rgba(160, 64, 0, 0.16); color: #a04000; border-color: rgba(160, 64, 0, 0.45); }
+.ent-biomarker { background: rgba(108, 52, 131, 0.14); color: #6c3483; border-color: rgba(108, 52, 131, 0.4); }
+
+.ent-negated { text-decoration: line-through; opacity: 0.85; }
+.ent-historical { font-style: italic; }
+
+.ent-chip {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* Entity table */
+.extraction-table { max-height: 420px; }
+.extraction-table table code { font-size: 0.68rem; }
+.flag-cell { white-space: nowrap; }
+.flag {
+  display: inline-block;
+  font-size: 0.62rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 10px;
+  margin-right: 0.25rem;
+  font-weight: 600;
+}
+.flag.neg { background: rgba(231, 111, 81, 0.2); color: var(--danger); }
+.flag.hist { background: rgba(69, 123, 157, 0.2); color: var(--info); }
+.flag.fam { background: rgba(233, 196, 106, 0.25); color: #b8860b; }
+
+/* Operations / audit trail */
+.operations-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.operation-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+.op-step {
+  width: 22px; height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+.operation-row > div { flex: 1; }
+.op-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.op-detail { font-size: 0.74rem; color: var(--text-secondary); }
+.op-count { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+/* Hover tooltip */
+.entity-tooltip {
+  position: fixed;
+  z-index: 2000;
+  width: 260px;
+  background: #2d2d2d;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.74rem;
+  pointer-events: none;
+}
+.entity-tooltip .tt-concept { font-weight: 700; margin-bottom: 0.4rem; }
+.entity-tooltip .tt-row { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.1rem 0; color: rgba(255,255,255,0.85); }
+.entity-tooltip .tt-row span { color: rgba(255,255,255,0.55); }
+.entity-tooltip .tt-row code { background: rgba(255,255,255,0.12); padding: 0 4px; border-radius: 3px; }
+.entity-tooltip .tt-note { margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); font-style: italic; }

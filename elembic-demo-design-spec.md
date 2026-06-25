@@ -1,8 +1,8 @@
-# Foundry Demo - 7 Section Explanation Design Spec
+# Elembic Demo - 7 Section Explanation Design Spec
 
 ## Overview
 
-This document outlines the 7-section AIDA-framework explanation for The Foundry demo. Each section has a specific purpose in the customer journey: capturing **Attention**, building **Interest**, creating **Desire**, and driving **Action**.
+This document outlines the 7-section AIDA-framework explanation for The Elembic demo. Each section has a specific purpose in the customer journey: capturing **Attention**, building **Interest**, creating **Desire**, and driving **Action**.
 
 ---
 
@@ -67,14 +67,14 @@ This document outlines the 7-section AIDA-framework explanation for The Foundry 
 │                    THE SOLUTION                         │
 │                                                        │
 │                   ☥ NURAXI                             │  ← Logo (28px, letter-spacing: 4px)
-│                  The Foundry                           │  ← Large title (52px)
+│                  The Elembic                           │  ← Large title (52px)
 │                                                        │
 │   A sovereign data transformation engine that          │  ← Subhead (22px, gray)
 │   converts fragmented clinical data into an            │
 │   AI-ready, research-grade intelligence platform       │
 │                                                        │
 │   ┌───────────┐    ┌──────────┐    ┌───────────┐      │
-│   │  Raw Data │ →  │ Foundry  │ →  │OMOP Output│      │  ← Transformation visual
+│   │  Raw Data │ →  │ Elembic  │ →  │OMOP Output│      │  ← Transformation visual
 │   │  ░░░░░░░  │    │    ●     │    │  ████████ │      │     Before: dashed border, tilted squares
 │   │  (chaos)  │    └──────────┘    │ (ordered) │      │     After: solid green border, aligned
 │   └───────────┘                    └───────────┘      │
@@ -86,7 +86,7 @@ This document outlines the 7-section AIDA-framework explanation for The Foundry 
 
 **Key Elements:**
 - Clear before/after visual metaphor
-- Foundry as the transformation point (brown pill button)
+- Elembic as the transformation point (brown pill button)
 - OMOP credential badge
 - Clean, centered layout
 
@@ -103,7 +103,7 @@ This document outlines the 7-section AIDA-framework explanation for The Foundry 
 ┌────────────────────────────────────────────────────────┐
 │                    THE PROCESS                          │
 │                                                        │
-│            How The Foundry Works                       │  ← Title (40px)
+│            How The Elembic Works                       │  ← Title (40px)
 │                                                        │
 │    ⬤       →      ⬤       →      ⬤       →      ⬤       →      ⬤    │
 │  📥 Ingest    🔒 De-identify  🔗 Tokenize   🏷️ Encode   ✓ Output   │
@@ -131,7 +131,7 @@ This document outlines the 7-section AIDA-framework explanation for The Foundry 
 
 ## Section 4: FOUR PILLARS OF TRUST (Desire)
 
-**Purpose:** Build trust through the 4 core principles that differentiate The Foundry.
+**Purpose:** Build trust through the 4 core principles that differentiate The Elembic.
 
 **Background:** White
 
@@ -338,7 +338,7 @@ This document outlines the 7-section AIDA-framework explanation for The Foundry 
 
 ## Files Provided
 
-1. `foundry-demo-sections.jsx` - Full React component with all 7 sections
+1. `elembic-demo-sections.jsx` - Full React component with all 7 sections
 2. This specification document
 
 The React file can be rendered directly or used as visual reference for your development team.

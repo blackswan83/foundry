@@ -1,11 +1,32 @@
-# Nuraxi Foundry Demo Prototype
+# Nuraxi Elembic Demo Prototype
 
 **King Faisal Specialist Hospital & Research Centre (KFSHRC)**
-*Version 1.0 | January 2026*
+*Version 1.1 | June 2026*
 
 ## Overview
 
-This prototype demonstrates the Nuraxi Foundry platform's capabilities for transforming fragmented clinical data from multiple hospital systems into a unified, de-identified, research-ready format.
+This prototype demonstrates the Nuraxi Elembic platform's capabilities for transforming fragmented clinical data from multiple hospital systems into a unified, de-identified, research-ready format.
+
+## What's new in v1.1
+
+- **Clinical Text Extraction & SNOMED Annotation (headline feature)** — a new
+  front-of-pipeline stage and tab. Unstructured clinical / molecular-pathology
+  text in → recognized entities, linked to **SNOMED CT** (clinical layer) and
+  **HGNC / HGVS / ClinVar / LOINC** (molecular layer), with **context detection**
+  (negation, temporality, experiencer), an adjustable **confidence threshold**, a
+  full **operations/audit log**, and **CSV / JSON / annotated-HTML** exports.
+  Includes a general ICU note and a genomic molecular-pathology sample. (Mirrors
+  the real Elembic MedCAT / MetaCAT stack; runs a curated, deterministic engine
+  in the demo. Codes are illustrative — validate against a terminology server.)
+- **Pipeline is now 6 stages**, led by Clinical Text Extraction.
+- **Patient count reconciled** to a single source of truth: **30 unique patients**
+  across every stage and label; 57 = labelled *source records*.
+- **AI Insights** render human-readable lab names (e.g., *Creatinine (2160-0)*),
+  require ≥3 serial measurements before declaring a trend, and give
+  finding-specific recommendations.
+- **De-identification** count matches the enumerated list; DOB reduced to year
+  only (strict Safe Harbor).
+- See **[RUN_OF_SHOW.md](RUN_OF_SHOW.md)** for the call walkthrough.
 
 ## Demo Objectives
 
@@ -23,7 +44,7 @@ This prototype demonstrates the Nuraxi Foundry platform's capabilities for trans
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Nuraxi Foundry Demo                          │
+│                    Nuraxi Elembic Demo                          │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
@@ -233,7 +254,7 @@ foundry/
 
 ## Contact
 
-For questions about this demo, contact the Nuraxi Foundry team.
+For questions about this demo, contact the Nuraxi Elembic team.
 
 ---
 

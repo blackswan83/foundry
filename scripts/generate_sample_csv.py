@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate a sample CSV with longitudinal multi-institute patient records for the Foundry demo.
+Generate a sample CSV with longitudinal multi-institute patient records for the Elembic demo.
 
 Structure:
 - 200 unique patients

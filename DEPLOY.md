@@ -1,6 +1,6 @@
 # Deploying to Railway
 
-This guide covers deploying the Nuraxi Foundry Demo to Railway.
+This guide covers deploying the Nuraxi Elembic Demo to Railway.
 
 ## Option 1: Two Services (Recommended)
 
@@ -20,7 +20,7 @@ railway login
 
 1. Go to [Railway Dashboard](https://railway.app/dashboard)
 2. Click "New Project" → "Empty Project"
-3. Name it "nuraxi-foundry"
+3. Name it "nuraxi-elembic"
 
 ### Step 3: Deploy Backend
 

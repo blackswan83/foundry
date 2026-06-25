@@ -1,5 +1,5 @@
 """
-API Routes for the Nuraxi Foundry Demo
+API Routes for the Nuraxi Elembic Demo
 
 Provides REST endpoints for demonstrating all platform capabilities.
 """
@@ -18,6 +18,7 @@ from ..services import (
     ClinicalAIAgent,
 )
 from ..services.csv_parser import CSVParserService, generate_deidentified_csv
+from ..services.clinical_extraction import ClinicalExtractionService
 
 router = APIRouter()
 
@@ -29,6 +30,7 @@ omop_transformer = OMOPTransformer()
 cohort_service = CohortQueryService()
 clinical_ai = ClinicalAIAgent()
 csv_parser = CSVParserService()
+extraction_service = ClinicalExtractionService()
 
 # Cache for demo data
 _demo_data_cache = {}
@@ -427,32 +429,72 @@ async def run_full_pipeline(
     }
 
     try:
-        # Step 1: Generate data
+        # Generate the source data first (it produces the free-text clinical
+        # notes that the extraction stage then consumes). The canonical patient
+        # count N is the number of UNIQUE INDIVIDUALS; the larger figure is the
+        # number of source records ingested across systems before linkage.
         generator = SyntheticDataGenerator(seed=seed)
         raw_data = generator.generate_demo_dataset(
             num_single_system_patients=int(num_patients * 0.7),
             num_multi_system_patients=int(num_patients * 0.3),
         )
         _demo_data_cache["raw_data"] = raw_data
+        unique_individuals = raw_data["summary"]["unique_individuals"]
+        source_records = raw_data["summary"]["total_patient_records"]
+        results["unique_patients"] = unique_individuals
+        results["source_records"] = source_records
+
+        # Step 1 (front of pipeline): Clinical Text Extraction & SNOMED Annotation.
+        # Run the Elembic NER+L engine over every generated clinical note so the
+        # headline stage is genuine, not decorative.
+        notes = [e.clinical_notes for e in raw_data["encounters"] if e.clinical_notes]
+        ext_candidates = ext_linked = ext_snomed = 0
+        for note in notes:
+            r = extraction_service.extract(note, threshold=0.5)
+            ext_candidates += r["stats"]["candidate_spans"]
+            ext_linked += r["stats"]["entities_passed_threshold"]
+            ext_snomed += sum(1 for e in r["entities"] if e["vocabulary"] == "SNOMED CT")
         results["pipeline_steps"].append({
             "step": 1,
-            "name": "Data Generation",
+            "name": "Clinical Text Extraction & SNOMED Annotation",
             "status": "completed",
-            "result": raw_data["summary"],
+            "result": {
+                "entities_linked": ext_linked,
+                "clinical_notes_processed": len(notes),
+                "candidate_spans": ext_candidates,
+                "snomed_concepts": ext_snomed,
+            },
         })
 
-        # Step 2: Tokenization
-        tokens = tokenization_service.tokenize_patient_batch(raw_data["patients"])
-        _demo_data_cache["patient_tokens"] = tokens
-        linkage_result = tokenization_service.demonstrate_linkage(raw_data["patients"])
+        # Step 2: Data Generation (source records that feed the structured path)
         results["pipeline_steps"].append({
             "step": 2,
-            "name": "Patient Linkage (Tokenization)",
+            "name": "Data Generation",
             "status": "completed",
-            "result": linkage_result["statistics"],
+            "result": {
+                "unique_patients": unique_individuals,
+                "source_records": source_records,
+                "encounters": raw_data["summary"]["total_encounters"],
+                "observations": raw_data["summary"]["total_observations"],
+            },
         })
 
-        # Step 3: De-identification
+        # Step 3: Tokenization / Patient Linkage
+        tokens = tokenization_service.tokenize_patient_batch(raw_data["patients"])
+        _demo_data_cache["patient_tokens"] = tokens
+        tokenization_service.demonstrate_linkage(raw_data["patients"])
+        results["pipeline_steps"].append({
+            "step": 3,
+            "name": "Patient Linkage (Tokenization)",
+            "status": "completed",
+            "result": {
+                "unique_patients": unique_individuals,
+                "source_records_linked": source_records,
+                "duplicate_records_linked": max(source_records - unique_individuals, 0),
+            },
+        })
+
+        # Step 4: De-identification
         deidentified = deid_service.deidentify_dataset(
             patients=raw_data["patients"],
             encounters=raw_data["encounters"],
@@ -462,26 +504,27 @@ async def run_full_pipeline(
         _demo_data_cache["deidentified_data"] = deidentified
         deid_report = deid_service.get_deidentification_report()
         results["pipeline_steps"].append({
-            "step": 3,
-            "name": "De-identification (Safe Harbor + HiPS)",
+            "step": 4,
+            "name": "De-identification (PDPL + HiPS)",
             "status": "completed",
             "result": {
-                "patients_deidentified": deid_report["total_patients_deidentified"],
+                "unique_patients": unique_individuals,
+                "records_deidentified": deid_report["total_patients_deidentified"],
                 "method": deid_report["pdpl_compliance"]["method"],
             },
         })
 
-        # Step 4: OMOP Transformation
+        # Step 5: OMOP Transformation
         omop_data = omop_transformer.transform_dataset(deidentified)
         _demo_data_cache["omop_data"] = omop_data
         cohort_service.load_omop_data(omop_data)
         omop_report = omop_transformer.get_transformation_report()
         results["pipeline_steps"].append({
-            "step": 4,
+            "step": 5,
             "name": "OMOP CDM Transformation",
             "status": "completed",
             "result": {
-                "persons": omop_report["unique_persons_created"],
+                "unique_patients": omop_report["unique_persons_created"],
                 "visits": omop_report["visits_created"],
                 "conditions": omop_report["conditions_created"],
                 "measurements": omop_report["measurements_created"],
@@ -489,13 +532,20 @@ async def run_full_pipeline(
             },
         })
 
-        # Step 5: Analytics
+        # Step 6: Analytics
         analytics = cohort_service.get_analytics_summary()
+        ds = analytics["data_summary"]
         results["pipeline_steps"].append({
-            "step": 5,
-            "name": "Analytics & Research Capabilities",
+            "step": 6,
+            "name": "Cohort & Analytics Ready",
             "status": "completed",
-            "result": analytics["data_summary"],
+            "result": {
+                "unique_patients": ds["total_persons"],
+                "visits": ds["total_visits"],
+                "conditions": ds["total_conditions"],
+                "measurements": ds["total_measurements"],
+                "drug_exposures": ds["total_drug_exposures"],
+            },
         })
 
         results["overall_status"] = "completed"
@@ -711,24 +761,32 @@ async def get_executive_summary():
     drugs = omop_data.get("drug_exposure", [])
     visits = omop_data.get("visit_occurrence", [])
 
-    # Calculate linkage rate
+    # Resolve records -> unique individuals. `unique_persons` is the single
+    # source of truth for N (the de-duplicated PERSON table); `total_records`
+    # is the number of source records ingested across systems before linkage.
     raw_patients = raw_data.get("patients", [])
     unique_persons = len(persons)
     total_records = len(raw_patients) if raw_patients else unique_persons
-    linkage_rate = round((1 - unique_persons / max(total_records, 1)) * 100 + 100, 1) if total_records > unique_persons else 100.0
+    duplicate_records_linked = max(total_records - unique_persons, 0)
 
-    # Top conditions
+    # Top conditions — resolve the SNOMED concept to a human-readable name so
+    # the dashboard never shows a bare ICD-10 code to a clinical audience.
     condition_counts = {}
     for c in conditions:
-        source = c.get("condition_source_value", "Unknown")
-        condition_counts[source] = condition_counts.get(source, 0) + 1
+        cid = c.get("condition_concept_id", 0)
+        src = c.get("condition_source_value", "")
+        name = cohort_service.CONDITION_NAMES.get(cid) or (f"ICD-10 {src}" if src else "Unknown")
+        condition_counts[name] = condition_counts.get(name, 0) + 1
     top_conditions = sorted(condition_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
-    # Top medications
+    # Top medications — resolve the RxNorm concept to its drug name.
+    rxnorm_names = {cid: nm for cid, nm in OMOPTransformer.RXNORM_CONCEPTS.values()}
     drug_counts = {}
     for d in drugs:
-        source = d.get("drug_source_value", "Unknown")
-        drug_counts[source] = drug_counts.get(source, 0) + 1
+        did = d.get("drug_concept_id", 0)
+        src = d.get("drug_source_value", "")
+        name = rxnorm_names.get(did) or (f"RxNorm {src}" if src else "Unknown")
+        drug_counts[name] = drug_counts.get(name, 0) + 1
     top_medications = sorted(drug_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
     # Quality metrics
@@ -743,9 +801,9 @@ async def get_executive_summary():
 
     return {
         "overview": {
-            "total_patients_processed": total_records,
-            "unique_individuals_identified": unique_persons,
-            "cross_system_linkage_rate": f"{linkage_rate:.0f}%",
+            "unique_patients": unique_persons,
+            "source_records_ingested": total_records,
+            "duplicate_records_linked": duplicate_records_linked,
             "deidentification_completeness": "100%",
             "omop_transformation_success": "100%"
         },
@@ -931,6 +989,59 @@ async def download_deidentified_csv():
         headers={
             "Content-Disposition": f"attachment; filename={filename}"
         }
+    )
+
+
+# ============ Clinical Text Extraction & SNOMED Annotation Endpoints ============
+#
+# The Elembic differentiator: NER + entity-linking + context detection over
+# *unstructured* clinical / molecular-pathology free text. Sits at the FRONT of
+# the pipeline — text in, structured + coded entities out, with a full audit log.
+
+
+class ExtractionRequest(BaseModel):
+    """Request for clinical text extraction."""
+    text: str
+    threshold: float = 0.5
+
+
+@router.get("/demo/extraction/samples")
+async def get_extraction_samples():
+    """List the staged synthetic notes (general ICU + genomic molecular pathology)."""
+    return {"samples": extraction_service.list_samples()}
+
+
+@router.get("/demo/extraction/sample/{sample_id}")
+async def get_extraction_sample(sample_id: str):
+    """Return the raw text of a staged sample note."""
+    return {"sample_id": sample_id, "text": extraction_service.get_sample(sample_id)}
+
+
+@router.post("/demo/extraction/extract")
+async def run_extraction(request: ExtractionRequest):
+    """
+    Run the Elembic extraction pipeline over free text:
+    segmentation -> NER -> SNOMED/HGNC/HGVS/ClinVar/LOINC linking ->
+    context detection (negation / temporality / experiencer) ->
+    confidence threshold -> structured export.
+    """
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text content is required")
+    threshold = max(0.0, min(request.threshold, 1.0))
+    return extraction_service.extract(request.text, threshold=threshold)
+
+
+@router.post("/demo/extraction/export.csv")
+async def export_extraction_csv(request: ExtractionRequest):
+    """Server-side CSV export of the extracted entity table."""
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text content is required")
+    result = extraction_service.extract(request.text, threshold=max(0.0, min(request.threshold, 1.0)))
+    csv_content = extraction_service.to_csv(result["entities"])
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=elembic_extracted_entities.csv"},
     )
 
 
