@@ -43,6 +43,19 @@ function csvEscape(v: string | number | boolean): string {
   return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Display steps for the staged processing animation (mirror the real operations
+// so the audit story is reinforced visually rather than completing instantly).
+const PROCESSING_STEPS = [
+  'Parsing document',
+  'Segmenting sentences & sections',
+  'Named-entity recognition (NER)',
+  'Linking to SNOMED / HGNC / HGVS / ClinVar / LOINC',
+  'Detecting context (negation / temporality / experiencer)',
+  'Confidence scoring & structured export',
+];
+
 export default function ClinicalTextExtraction() {
   const [samples, setSamples] = useState<ExtractionSample[]>([]);
   const [selectedSample, setSelectedSample] = useState<string>('molecular_pathology');
@@ -53,6 +66,7 @@ export default function ClinicalTextExtraction() {
   const [error, setError] = useState<string | null>(null);
   const [hover, setHover] = useState<{ ent: ExtractedEntity; x: number; y: number } | null>(null);
   const [view, setView] = useState<'annotated' | 'table'>('annotated');
+  const [procStep, setProcStep] = useState(0);
   const textRef = useRef(text);
   textRef.current = text;
 
@@ -78,7 +92,7 @@ export default function ClinicalTextExtraction() {
     }
   };
 
-  const runExtract = async (th: number = threshold) => {
+  const runExtract = async (th: number = threshold, animated = true) => {
     const current = textRef.current;
     if (!current.trim()) {
       setError('Load a sample or paste a clinical note first.');
@@ -86,20 +100,37 @@ export default function ClinicalTextExtraction() {
     }
     setLoading(true);
     setError(null);
+    setResult(null);
+    setProcStep(0);
     try {
-      const r = await api.runExtraction(current, th);
+      // Kick off the real work, then walk the operations so the extraction
+      // doesn't complete instantly (it reads as more realistic, and reinforces
+      // the "here are the operations performed" framing).
+      const apiPromise = api.runExtraction(current, th);
+      if (animated) {
+        for (let i = 0; i < PROCESSING_STEPS.length; i++) {
+          setProcStep(i + 1);
+          await sleep(420 + Math.random() * 360); // ~0.4-0.8s per step
+        }
+      } else {
+        // Lighter re-apply when only the confidence threshold moved.
+        setProcStep(PROCESSING_STEPS.length);
+        await sleep(550);
+      }
+      const r = await apiPromise;
       setResult(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Extraction failed');
     } finally {
       setLoading(false);
+      setProcStep(0);
     }
   };
 
   // Re-run when the threshold is committed (slider release / keyboard) if we
   // already have a result, so the confidence filter is visibly adjustable.
   const commitThreshold = () => {
-    if (result) runExtract(threshold);
+    if (result && !loading) runExtract(threshold, false);
   };
 
   // ---- exports ----
@@ -234,6 +265,25 @@ export default function ClinicalTextExtraction() {
       {error && (
         <div className="result-card" style={{ borderLeft: '4px solid var(--danger)' }}>
           <p style={{ color: 'var(--danger)' }}>{error}</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="result-card">
+          <h3>Processing clinical text…</h3>
+          <div className="processing-steps">
+            {PROCESSING_STEPS.map((label, i) => {
+              const isComplete = procStep > i + 1;
+              const isActive = procStep === i + 1;
+              return (
+                <div key={i} className={`processing-step ${isActive ? 'active' : ''} ${isComplete ? 'completed' : ''}`}>
+                  <span className="step-indicator">{isComplete ? '✓' : i + 1}</span>
+                  <span className="step-label">{label}</span>
+                  {isActive && <span className="step-loader" />}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

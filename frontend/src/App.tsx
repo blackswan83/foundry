@@ -129,7 +129,11 @@ function App() {
     setError(null);
     setCohortResult(null);
     try {
-      const result = await api.runCohortQuery(selectedQuery);
+      // Run the query while showing a realistic amount of "work" so the result
+      // doesn't pop in instantly.
+      const resultPromise = api.runCohortQuery(selectedQuery);
+      await sleep(800 + Math.random() * 700);
+      const result = await resultPromise;
       setCohortResult(result.cohort_result);
       if (result.cohort_result.member_count === 0) {
         setError(`No patients found matching "${result.cohort_result.cohort_name}" criteria. Try a different query or run the demo pipeline first.`);
@@ -144,8 +148,12 @@ function App() {
 
   const analyzePatient = async () => {
     setLoading(true);
+    setPatientAnalysis(null);
     try {
-      const result = await api.analyzePatient(selectedPatient);
+      // Simulate the model "reviewing" the encounter so it feels like real work.
+      const resultPromise = api.analyzePatient(selectedPatient);
+      await sleep(1000 + Math.random() * 800);
+      const result = await resultPromise;
       setPatientAnalysis(result.analysis);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
